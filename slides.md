@@ -12,6 +12,7 @@ revealOptions:
   backgroundTransition: 'fade'
 ---
 
-# Authentifizierung und Autorisierung mit OAuth 2 und OpenID Connect 
+# dezentrale Authentifizierung mit OAuth 2
 
-{{1_getStarted.md}}
+{{1_Einleitung.md}}
+{{2_JWT.md}}
