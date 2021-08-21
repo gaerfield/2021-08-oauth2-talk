@@ -16,12 +16,112 @@
     <div class="reveal">
       <div class="slides"><section  data-markdown><script type="text/template">
 
-# Authentifizierung und Autorisierung mit OAuth 2 und OpenID Connect 
+# dezentrale Authentifizierung mit OAuth 2
 
-</script></section><section  data-markdown><script type="text/template">
-## Thats new
+</script></section><section ><section data-markdown><script type="text/template">
+## Ziel
 
-</script></section></div>
+Dezentrales Authentifizierungssystem für webbasierte Dienste.
+
+* OAuth als Protokoll zur Authentifizierung für die Autorisierung von Zugriffsrechten zwischen zwei Applikationen
+* OpenID Connect aufbauend auf OAuth erlaubt die Wiederverwendung desselben Logins für verschiedene Applikationen (Single-Sign-On) und den standardisierten Abruf von Profilinformationen
+
+</script></section><section data-markdown><script type="text/template">
+## Geschichte
+
+* 2005 OpenID Vorstellung des offenen Single-Sign-On Protokolls
+* 2006 Entwicklung von OAuth 1.0 während der Integration von OpenID in Twitter (Delegation der Authentifizierung)
+* 2007 Vortstellung von OAuth 1.0
+* Juni 2007 Gründung der OpenID Foundation zur Sicherung von Markenrechten
+* Dezember 2007 OpenID 2.0
+* November 2008 Vorschlag an die IETF zur Standardisierung von OAuth
+* 2012 OAuth 2 durch die IETF als RFC 6749 und RFC 6750 veröffentlicht.
+* irgendwann OpenID Connect als Schicht oberhalb des OAuth Protokolls
+
+</script></section><section data-markdown><script type="text/template">
+## Startup s0ftf1t
+
+Fitnessstudio-Startup mit online Training-Tracker:
+* gehe Trainieren wann immer du willst
+* rufe deine Trainings-Historie ab wann immer du willst
+
+</script></section><section data-markdown><script type="text/template">
+### Architektur
+
+<img src='https://g.gravizo.com/svg?@startuml;component "s0ftf1t.de";@enduml'/>
+
+### Typischer Flow der Authentifizierung
+<img src='https://g.gravizo.com/svg?@startuml;actor user;participant "webclient";participant "server";user -> webclient++ : login bei "s0ftf1t.de";webclient -> server++ : login;server -> server : validiere;return ok;return willkommen;@enduml'/>
+
+</script></section><section data-markdown><script type="text/template">
+### unsere App soll anderen Zugriff gewähren
+
+FitX Tracker-App
+* Einige Nutzer haben die FitX-App
+* möchte die Daten des Fitnessstudios in der App auswerten
+* Wie geben wir der App Zugriff auf die Daten des Nutzers?
+
+Facebook
+* Einige Nutzer wollen ihr Facebook-Konto zur Anmeldung verwenden
+* wie kann ich die
+
+## Modularisierung von s0ftf1t
+
+</script></section></section><section ><section data-markdown><script type="text/template">
+### Problemstellung
+
+* skalierung von einem Fitnessstudio auf tausende
+* Login und Historie sind unterschiedlich stark frequentiert und sollen unabhängig skalieren um Ressourcen zu sparen
+* Wie autorisieren wir Nutzer zum Abruf seiner Daten?
+  * Klasssicher Ansatz: sessionIds
+
+</script></section><section data-markdown><script type="text/template">
+#### Login
+
+<img src='https://g.gravizo.com/svg?@startuml;actor user;participant "webclient";participant "login";database "session-management" as ses;;user -> webclient++ : login bei "s0ftf1t.de";webclient -> login++ : login;login -> login : validiere;login -> ses++ : loggedIn(User);ses -> ses : lege session an und speichere User;return sessionId;return sessionId;return willkommen;@enduml'/>
+
+</script></section><section data-markdown><script type="text/template">
+#### Abruf der Historie
+
+<img src='https://g.gravizo.com/svg?@startuml;actor user;participant "webclient";participant "bankdruecken-historie" as his;database "session-management" as ses;;user -> webclient++ : Klick auf Historie;webclient -> his++ : getFor(sessionId);his -> ses++ : getUserForSession(sessionId);return User;his -> his : getFor(User);return history;return tabelle;@enduml'/>
+
+</script></section><section data-markdown><script type="text/template">
+#### Abruf der Historie
+
+* Sessions funktionieren gut für Warenkörbe (da session-Informationen verändert werden)
+* ein Login ändert sich aber nicht, warum nicht direkt die Informationen teilen?
+
+</script></section><section data-markdown><script type="text/template">
+### Token
+
+<img src='https://g.gravizo.com/svg?@startuml;actor user;participant "webclient";participant "login";participant "bankdruecken-historie" as his;;user -> webclient++ : login bei "s0ftf1t.de";webclient -> login++ : login;login -> login : validiere;return User=Achim;return willkommen;...;user -> webclient++ : Klick auf Historie;webclient -> his++ : getFor(user = Achim);return history;return tabelle;@enduml'/>
+
+</script></section><section data-markdown><script type="text/template">
+#### JWT
+
+* Wie sicherstellen, dass das Token nicht verändert wurde?
+* JSON Web Token
+* Aussprache: JOT
+* Standard zum Austausch von **verifizierbaren** Informationen
+
+</script></section><section data-markdown><script type="text/template">
+#### JWT
+
+* Aufbau eines JWT-Token: "base64(Header).base64(Payload).signature"
+  * Header: unter anderem den Signatur-Algorithmus
+  * Payload: sog. "Claims", die verifizierbaren Entitäten
+  * Signatur: hash des Klartexts aus header und payload entsprechend des im Header angegebenen Algorithmus
+```
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c
+```
+JWT.io
+
+
+### JWT
+
+<img src='https://g.gravizo.com/svg?@startuml;actor user;participant "webclient";participant "login";participant "bankdruecken-historie" as his;;user -> webclient++ : login bei "s0ftf1t.de";webclient -> login++ : login;login -> login : validiere;login -> login : erzeuge JWT;login -> login : signiere JWT mittels\nprivate login-private-Key;return --User-- **JWT**;return willkommen;...;user -> webclient++ : Klick auf Historie;webclient -> his++ : getFor(--User-- **JWT**);his -> his : validiere Signatur mittels\nlogin-public-key;return history;return tabelle;@enduml'/>
+
+</script></section></section></div>
     </div>
 
     <script src="./dist/reveal.js"></script>
