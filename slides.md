@@ -12,6 +12,6 @@ revealOptions:
   backgroundTransition: 'fade'
 ---
 
-# reveal-md & github-pages
+# Authentifizierung und Autorisierung mit OAuth 2 und OpenID Connect 
 
 {{1_getStarted.md}}
