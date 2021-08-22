@@ -115,3 +115,33 @@ his -> his : validiere Signatur mittels\nlogin-public-key
 return history
 return tabelle
 ```
+
+### Fazit
+
+In einem verteilten System ist eine zentrale Authentifikations-Instanz welche JWT-Tokens ausstellt hinreichend.
+
+```puml
+left to right direction
+
+cloud "s0ftf1t" {
+  component Login
+  note right of [Login]
+    erstellt und signiert
+    Auth-Token (JWT)
+  end note
+  component "bankdruecken-historie" as his
+  note right of [Login]
+    prüft Signatur des Auth-Token
+  end note
+  component webclient
+
+  webclient --> Login: einloggen
+  webclient --> his : Historie abrufen\nmit JWT im Header
+  webclient <-- Login : liefert Auth-Token (JWT)
+
+  his -> Login : ruft public key ab
+}
+
+
+
+```

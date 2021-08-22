@@ -29,7 +29,7 @@ Fitnessstudio-Startup mit online Training-Tracker:
 ### Architektur
 
 ```puml
-component "s0ftf1t.de"
+component "s0ft-fit.de"
 ```
 
 ### Typischer Flow der Authentifizierung
@@ -37,21 +37,9 @@ component "s0ftf1t.de"
 actor user
 participant "webclient"
 participant "server"
-user -> webclient++ : login bei "s0ftf1t.de"
+user -> webclient++ : login bei "s0ft-fit.de"
 webclient -> server++ : login
 server -> server : validiere
 return ok
 return willkommen
 ```
-
-<!--v-->
-### unsere App soll anderen Zugriff gewähren
-
-FitX Tracker-App
-* Einige Nutzer haben die FitX-App
-* möchte die Daten des Fitnessstudios in der App auswerten
-* Wie geben wir der App Zugriff auf die Daten des Nutzers?
-
-Facebook
-* Einige Nutzer wollen ihr Facebook-Konto zur Anmeldung verwenden
-* wie kann ich die
