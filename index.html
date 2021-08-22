@@ -48,22 +48,10 @@ Fitnessstudio-Startup mit online Training-Tracker:
 </script></section><section data-markdown><script type="text/template">
 ### Architektur
 
-<img src='https://g.gravizo.com/svg?@startuml;component "s0ftf1t.de";@enduml'/>
+<img src='https://g.gravizo.com/svg?@startuml;component "s0ft-fit.de";@enduml'/>
 
 ### Typischer Flow der Authentifizierung
-<img src='https://g.gravizo.com/svg?@startuml;actor user;participant "webclient";participant "server";user -> webclient++ : login bei "s0ftf1t.de";webclient -> server++ : login;server -> server : validiere;return ok;return willkommen;@enduml'/>
-
-</script></section><section data-markdown><script type="text/template">
-### unsere App soll anderen Zugriff gewähren
-
-FitX Tracker-App
-* Einige Nutzer haben die FitX-App
-* möchte die Daten des Fitnessstudios in der App auswerten
-* Wie geben wir der App Zugriff auf die Daten des Nutzers?
-
-Facebook
-* Einige Nutzer wollen ihr Facebook-Konto zur Anmeldung verwenden
-* wie kann ich die
+<img src='https://g.gravizo.com/svg?@startuml;actor user;participant "webclient";participant "server";user -> webclient++ : login bei "s0ft-fit.de";webclient -> server++ : login;server -> server : validiere;return ok;return willkommen;@enduml'/>
 
 ## Modularisierung von s0ftf1t
 
@@ -120,6 +108,12 @@ JWT.io
 ### JWT
 
 <img src='https://g.gravizo.com/svg?@startuml;actor user;participant "webclient";participant "login";participant "bankdruecken-historie" as his;;user -> webclient++ : login bei "s0ftf1t.de";webclient -> login++ : login;login -> login : validiere;login -> login : erzeuge JWT;login -> login : signiere JWT mittels\nprivate login-private-Key;return --User-- **JWT**;return willkommen;...;user -> webclient++ : Klick auf Historie;webclient -> his++ : getFor(--User-- **JWT**);his -> his : validiere Signatur mittels\nlogin-public-key;return history;return tabelle;@enduml'/>
+
+### Fazit
+
+In einem verteilten System ist eine zentrale Authentifikations-Instanz welche JWT-Tokens ausstellt hinreichend.
+
+<img src='https://g.gravizo.com/svg?@startuml;left to right direction;;cloud "s0ftf1t" {;component Login;note right of [Login];erstellt und signiert;Auth-Token (JWT);end note;component "bankdruecken-historie" as his;note right of [Login];prüft Signatur des Auth-Token;end note;component webclient;;webclient --> Login: einloggen;webclient --> his : Historie abrufen\nmit JWT im Header;webclient <-- Login : liefert Auth-Token (JWT);;his -> Login : ruft public key ab;};;;;@enduml'/>
 
 </script></section></section></div>
     </div>
