@@ -6,6 +6,7 @@
 
 User sollen sich mit ihren bestehenden Google-Konto oder Github-Konto anmelden können (Single Sign On).
 
+<!--v-->
 ### Lösung 1
 
 Wir integrieren alle provider für jede Komponente im Backend:
@@ -32,6 +33,7 @@ cloud s0ft-fit {
 }
 ```
 
+<!--v-->
 ### Lösung 2 - OpenID Connect
 
 OpenId Connect (OIDC) der aufbauend auf OAuth weitere "claims" definiert und Standard-Endpoints für automatische Discovery:
@@ -39,6 +41,7 @@ OpenId Connect (OIDC) der aufbauend auf OAuth weitere "claims" definiert und Sta
 * Auth0: https://s0ft-fit.eu.auth0.com/.well-known/openid-configuration
 * Google: https://accounts.google.com/.well-known/openid-configuration
 
+<!--v-->
 #### grobe Architektur
 
 Im Grunde: wir registrieren s0ft-fit als Drittanwendung in google bzw. github für den Abruf von Profile-Informationen.
@@ -65,29 +68,31 @@ cloud s0ft-fit {
 }
 ```
 
+<!--v-->
 #### grobe Architektur
 
 ```puml
-
 Actor "Ich\n(Resource Owner)" as reso
 participant "Postman\n(Client)" as client
-participant "Github\n(Resource Server)" as ress
-
+participant "bankdruecken-history\n(Resource Server)" as ress
 participant "login\n(Authorization Server)" as auth
+participant "github\n(externer Authorization Server)" as gauth
 
 reso -> client++ : get repositories
 group wenn kein access token vorhanden
 client -> auth++ : redirect
-auth -> reso++ : Zugriff gewähren für scope "repo"?
-return OK
-return github-token
+auth -> reso++ : bitte einloggen\n**oder social login wählen**
+return einloggen mit github
+auth -> gauth++ : redirect
+gauth -> reso++ : bitte einloggen
+return username + passwort
+gauth -> gauth : authentifiziere
+return idtoken
+auth -> auth : validiere token
+auth -> auth : finde passenden Account\n(oder erstelle neuen)
+return s0ft-fit Access Token
 end
-client -> ress++ : GET /users/gaerfield/repos\nRequest-Header: github-token
-return repositories
-return repositories
+client -> ress++ : GET /history\nRequest-Header: s0ft-fit token
+return history
+return history
 ```
-
-###  später
-* https://openidconnect.net/
-
-dieses mal mit openid

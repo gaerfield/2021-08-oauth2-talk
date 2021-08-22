@@ -47,6 +47,9 @@ participant "Github Auth\n(Authorization Server)" as auth
 reso -> client++ : get repositories
 group wenn kein access token vorhanden
 client -> auth++ : redirect
+auth -> reso++ : bitte einloggen
+return username+password
+auth -> auth : authentifiziere
 auth -> reso++ : Zugriff gewähren für scope "repo"?
 return OK
 return github-token
@@ -71,12 +74,3 @@ return repositories
 * oder extern einkaufen:
   * (Okta)[https://www.okta.com/de/]
   * (Auth0)[https://auth0.com/de]
-
-<!--v-->
-### Beispiel Auth0
-
-* https://s0ft-fit.eu.auth0.com/.well-known/openid-configuration
-
-### Fazit
-
-* bloss nicht selber implementieren
