@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 
-    <title>reveal-md deployed to gh-pages</title>
+    <title>dezentrale Authentifizierung mit OAuth 2</title>
     <link rel="shortcut icon" href="./favicon.ico"/>
     <link rel="stylesheet" href="./dist/reveal.css" />
     <link rel="stylesheet" href="./dist/theme/solarized.css" id="theme" />
@@ -50,17 +50,19 @@ Fitnessstudio-Startup mit online Training-Tracker:
 
 <img src='https://g.gravizo.com/svg?@startuml;component "s0ft-fit.de";@enduml'/>
 
+</script></section><section data-markdown><script type="text/template">
 ### Typischer Flow der Authentifizierung
 <img src='https://g.gravizo.com/svg?@startuml;actor user;participant "webclient";participant "server";user -> webclient++ : login bei "s0ft-fit.de";webclient -> server++ : login;server -> server : validiere;return ok;return willkommen;@enduml'/>
 
+</script></section></section><section ><section data-markdown><script type="text/template">
 ## Modularisierung von s0ftf1t
 
-</script></section></section><section ><section data-markdown><script type="text/template">
+</script></section><section data-markdown><script type="text/template">
 ### Problemstellung
 
-* skalierung von einem Fitnessstudio auf tausende
+* wir haben expandiert, auf tausende Fitnessstudios
 * Login und Historie sind unterschiedlich stark frequentiert und sollen unabhängig skalieren um Ressourcen zu sparen
-* Wie autorisieren wir Nutzer zum Abruf seiner Daten?
+* Wie überprüfen wir eine erfolgreiche Authentifizierung in einem verteilten System?
   * Klasssicher Ansatz: sessionIds
 
 </script></section><section data-markdown><script type="text/template">
@@ -71,13 +73,14 @@ Fitnessstudio-Startup mit online Training-Tracker:
 </script></section><section data-markdown><script type="text/template">
 #### Abruf der Historie
 
-<img src='https://g.gravizo.com/svg?@startuml;actor user;participant "webclient";participant "bankdruecken-historie" as his;database "session-management" as ses;;user -> webclient++ : Klick auf Historie;webclient -> his++ : getFor(sessionId);his -> ses++ : getUserForSession(sessionId);return User;his -> his : getFor(User);return history;return tabelle;@enduml'/>
+<img src='https://g.gravizo.com/svg?@startuml;actor user;participant "webclient";participant "bankdruecken-historie" as his;participant "login";database "session-management" as ses;;user -> webclient++ : Klick auf Historie;webclient -> his++ : getFor(sessionId);his -> login++ : getUserForSession(sessionId);login -> ses++ : sessionId;return User;return User;his -> his : getFor(User);return history;return tabelle;@enduml'/>
 
 </script></section><section data-markdown><script type="text/template">
 #### Abruf der Historie
 
 * Sessions funktionieren gut für Warenkörbe (da session-Informationen verändert werden)
-* ein Login ändert sich aber nicht, warum nicht direkt die Informationen teilen?
+* ein Login ändert sich aber nicht
+* Kann der Login nicht direkt geliefert werden statt einer Id die auf den User verweist?
 
 </script></section><section data-markdown><script type="text/template">
 ### Token
@@ -88,32 +91,157 @@ Fitnessstudio-Startup mit online Training-Tracker:
 #### JWT
 
 * Wie sicherstellen, dass das Token nicht verändert wurde?
-* JSON Web Token
-* Aussprache: JOT
-* Standard zum Austausch von **verifizierbaren** Informationen
+  * JSON Web Token (Aussprache: JOT)
+  * JWT ist Standard zum Austausch von **verifizierbaren** Informationen
 
 </script></section><section data-markdown><script type="text/template">
 #### JWT
 
-* Aufbau eines JWT-Token: "base64(Header).base64(Payload).signature"
+* Aufbau eines JWT-Token:
+  * "base64(Header).base64(Payload).signature"
   * Header: unter anderem den Signatur-Algorithmus
   * Payload: sog. "Claims", die verifizierbaren Entitäten
   * Signatur: hash des Klartexts aus header und payload entsprechend des im Header angegebenen Algorithmus
-```
-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c
-```
-JWT.io
+  * Beispiel: JWT.io
 
-
+</script></section><section data-markdown><script type="text/template">
 ### JWT
 
-<img src='https://g.gravizo.com/svg?@startuml;actor user;participant "webclient";participant "login";participant "bankdruecken-historie" as his;;user -> webclient++ : login bei "s0ftf1t.de";webclient -> login++ : login;login -> login : validiere;login -> login : erzeuge JWT;login -> login : signiere JWT mittels\nprivate login-private-Key;return --User-- **JWT**;return willkommen;...;user -> webclient++ : Klick auf Historie;webclient -> his++ : getFor(--User-- **JWT**);his -> his : validiere Signatur mittels\nlogin-public-key;return history;return tabelle;@enduml'/>
+<img src='https://g.gravizo.com/svg?@startuml;actor user;participant "webclient";participant "login";participant "bankdruecken-historie" as his;;user -> webclient++ : login bei "s0ftf1t.de";webclient -> login++ : login;login -> login : validiere;login -> login : erzeuge JWT;login -> login : signiere JWT mittels\nprivate login-key;return --User-- **JWT**;return willkommen;...;user -> webclient++ : Klick auf Historie;webclient -> his++ : getFor(--User-- **JWT**);his -> his : validiere Signatur mittels\nlogin-public-key;return history;return tabelle;@enduml'/>
 
+</script></section><section data-markdown><script type="text/template">
 ### Fazit
 
 In einem verteilten System ist eine zentrale Authentifikations-Instanz welche JWT-Tokens ausstellt hinreichend.
 
-<img src='https://g.gravizo.com/svg?@startuml;left to right direction;;cloud "s0ftf1t" {;component Login;note right of [Login];erstellt und signiert;Auth-Token (JWT);end note;component "bankdruecken-historie" as his;note right of [Login];prüft Signatur des Auth-Token;end note;component webclient;;webclient --> Login: einloggen;webclient --> his : Historie abrufen\nmit JWT im Header;webclient <-- Login : liefert Auth-Token (JWT);;his -> Login : ruft public key ab;};;;;@enduml'/>
+<img src='https://g.gravizo.com/svg?@startuml;left to right direction;;cloud "s0ft-fit" {;component Login;note right of [Login];erstellt und signiert;Auth-Token (JWT);end note;component "bankdruecken-historie" as his;note right of [his];prüft Signatur;des Auth-Token;end note;component webclient;;webclient --> Login: einloggen;webclient --> his : Historie abrufen\nmit JWT im Header;webclient <-- Login : liefert Auth-Token (JWT);;his -> Login : ruft public key ab;};;;;@enduml'/>
+
+</script></section></section><section ><section data-markdown><script type="text/template">
+## OAUTH
+
+</script></section><section data-markdown><script type="text/template">
+### neue Andforderung
+
+* s0ft-fit ist riesig geworden
+* die Tracker-App FitX möchte unsere Daten in ihre App für statistische Auswertungen integrieren
+
+</script></section><section data-markdown><script type="text/template">
+### Problemstellung
+
+* Wie geben wir der Firma Zugriff auf unsere Api?
+* Wie beschränken wir den Zugriff nur auf die Nutzer, die tatsächlich diese Daten weiterreichen möchten?
+
+</script></section><section data-markdown><script type="text/template">
+### OAuth
+
+OAuth erlaubt es Nutzern einer Anwendung eine andere Anwendung in Ihrem Namen aufzurufen, ohne dass geheime Details der Zugangsberechtigung geteilt werden müsen.
+
+</script></section><section data-markdown><script type="text/template">
+#### Beispiel Github
+
+* [Gitub - creating an oauth app](https://docs.github.com/en/developers/apps/building-oauth-apps/creating-an-oauth-app)
+
+</script></section><section data-markdown><script type="text/template">
+#### OAuth Grundbegriffe
+
+* Resource Owner: Benutzer (der Zugriff auf seine Daten gewährt)
+* Resource Server: Dienst auf dem die geschützten Resourcen liegen
+* Client: Drittanwendung, die Zugriff auf die Daten möchte
+* Authorization Server: der Server, der den _Resource Owner_ authentifiziert und _Access Token_ und _Refresh Token_  ausstellt
+* Access Token: kurzlebiges geheimes Token, mittels dessen Resourcen beim _Resource Server_ im Namen des _Resource Owner_ abgerufen werden können
+* Refresh Token: "langlebiges" geheimes Token mittels dem neue _Access Token_ beim _Authorization Server_ abgerufen werden können ohne sich erneut authentifizieren zu müssen
+* Scope: feingranulare Zugriffsrechte die durch den _Client_ angefragt werden
+* Consent: die explizite Zustimmung des _Resource Owner_ ob sie dem _Client_ die angefragten Scopes gewähren
+
+</script></section><section data-markdown><script type="text/template">
+#### der Oauth-Flow am Beispiel Github
+<img src='https://g.gravizo.com/svg?@startuml;;Actor "Ich\n(Resource Owner)" as reso;participant "Postman\n(Client)" as client;participant "Github\n(Resource Server)" as ress;participant "Github Auth\n(Authorization Server)" as auth;;reso -> client++ : get repositories;group wenn kein access token vorhanden;client -> auth++ : redirect;auth -> reso++ : bitte einloggen;return username+password;auth -> auth : authentifiziere;auth -> reso++ : Zugriff gewähren für scope "repo"?;return OK;return github-token;end;client -> ress++ : GET /users/gaerfield/repos\nRequest-Header: github-token;return repositories;return repositories;@enduml'/>
+
+</script></section><section data-markdown><script type="text/template">
+#### Beispiel Github II
+
+* andere scopes ausprobieren
+
+</script></section><section data-markdown><script type="text/template">
+### Also OAuth selbst implementieren?
+
+* tendenziell eher nein
+* stattdessen Identity Server nutzen:
+  * [Liste div. Server](https://openid.net/developers/certified/)
+  * z.B. Keycloak
+* oder extern einkaufen:
+  * (Okta)[https://www.okta.com/de/]
+  * (Auth0)[https://auth0.com/de]
+
+</script></section></section><section ><section data-markdown><script type="text/template">
+## OpenID
+
+</script></section><section data-markdown><script type="text/template">
+### neue Anforderung
+
+User sollen sich mit ihren bestehenden Google-Konto oder Github-Konto anmelden können (Single Sign On).
+
+</script></section><section data-markdown><script type="text/template">
+### Lösung 1
+
+Wir integrieren alle provider für jede Komponente im Backend:
+
+<img src='https://g.gravizo.com/svg?@startuml;left to right direction;cloud google;cloud github;cloud s0ft-fit {;component login;component "bankdruecken-history" as his;component client;;client --> login : login falls s0ft-fit-account;client --> github : login falls github-account;client --> google : login falls google;;client ---> his : GET /history\nHeader enthält\ngoogle-token || github-token || s0ftfit-token;login <-- his : get public key;google <-- his : get public key;github <-- his : get public key;;his -> his : validiere token je nach typ;};@enduml'/>
+
+</script></section><section data-markdown><script type="text/template">
+### Lösung 2 - OpenID Connect
+
+OpenId Connect (OIDC) der aufbauend auf OAuth weitere "claims" definiert und Standard-Endpoints für automatische Discovery:
+
+* Auth0: https://s0ft-fit.eu.auth0.com/.well-known/openid-configuration
+* Google: https://accounts.google.com/.well-known/openid-configuration
+
+</script></section><section data-markdown><script type="text/template">
+#### grobe Architektur
+
+Im Grunde: wir registrieren s0ft-fit als Drittanwendung in google bzw. github für den Abruf von Profile-Informationen.
+
+<img src='https://g.gravizo.com/svg?@startuml;left to right direction;cloud google;cloud github;cloud s0ft-fit {;component "Identity Provider\n(Auth0)" as login;component "bankdruecken-history" as his;component client;;client --> login : redirect to login;google --> login  : rufe idToken ab;github <-- login  : rufe idToken ab;login --> login : validiere Token;client <-- login : liefere s0ft-fit\nAccess Token;;;login <-- his : rufe public key ab;client --> his : rufe history mit\ns0ft-fit Token ab;his -> his : validiere token je nach typ;};@enduml'/>
+
+</script></section><section data-markdown><script type="text/template">
+#### grobe Architektur
+
+<img src='https://g.gravizo.com/svg?@startuml;Actor "Ich\n(Resource Owner)" as reso;participant "Postman\n(Client)" as client;participant "bankdruecken-history\n(Resource Server)" as ress;participant "login\n(Authorization Server)" as auth;participant "github\n(externer Authorization Server)" as gauth;;reso -> client++ : get repositories;group wenn kein access token vorhanden;client -> auth++ : redirect;auth -> reso++ : bitte einloggen\n**oder social login wählen**;return einloggen mit github;auth -> gauth++ : redirect;gauth -> reso++ : bitte einloggen;return username + passwort;gauth -> gauth : authentifiziere;return idtoken;auth -> auth : validiere token;auth -> auth : finde passenden Account\n(oder erstelle neuen);return s0ft-fit Access Token;end;client -> ress++ : GET /history\nRequest-Header: s0ft-fit token;return history;return history;@enduml'/>
+
+</script></section></section><section ><section data-markdown><script type="text/template">
+## Zusammenfassung
+
+* Java Web Tokens erlauben in verteilten Systemen den Austausch verifizierbarer Informationen
+* OAuth ermöglicht es Nutzern den Zugriff auf die eigenen Daten für Drittanwendungen zu steuern (ohne das Passwort weitergeben zu müssen)
+* OpenId ermöglicht es Logins wiederzuverwenden
+
+</script></section><section data-markdown><script type="text/template">
+## Fazit
+
+* die Implementation einer Authentifizierung ist nach meiner Erfahrung schon immer kompliziert gewesen, selbst in Monolithen:
+  * User Datenbank muss gepflegt werden
+  * Rollen und Gruppen müssen verwaltet werden
+  * etc.
+* selbst wenn keine Anforderung für Social Logins oder Zugriffserlaubnis für Drittanwendungen besteht, ist der Einsatz eines Identity-Providers zu bevorzugen (sei es on-premise oder service):
+  * Implementationskosten verlagern sich auf Konfigurationskosten
+  * Verringerung der Anwendungskomplexität:
+    * das Backend muss nichts über Authentifikation wissen
+    * alle relevanten Informationen sind im Token enthalten
+    * oder können beim Identity Provider abgefragt werden
+  * Betriebskosten sind identisch oder geringer
+  * geringere Sicherheitsrisiken
+  * erzwingt sinvollere Architektur durch Trennung von Verantwortlichkeiten über standardisierte Schnittstellen
+
+</script></section><section data-markdown><script type="text/template">
+## Fazit
+
+Bloß nicht selber implementieren!
+
+###  Links
+
+* https://openidconnect.net/
+
+dieses mal mit openid
 
 </script></section></section></div>
     </div>
