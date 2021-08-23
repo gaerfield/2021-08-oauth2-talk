@@ -8,6 +8,14 @@
 <!--v-->
 ## Fazit
 
+* Authentifizierung und Autorisierung ist eine klassische querschnittliche Aufgabe (wie Logging, Tracing)
+* entsprechend sollten diese Aufgaben von der Domäne getrennt werden
+* OAuth 2.0 und OpenID Connect bieten einen Standad diese Trennung in der eigenen Applikation sicherzustellen
+* positive Seiteneffekte:
+  * Entwicklung des Backends vereinfacht sich, da nur auf entsprechende Scopes im Access-Token geprüft werden muss
+  * die Zukunftssicherheit der Applikation erhöht sich, da diese sich leichter mit weiteren Anwendungen integrieren kann
+  * die Implementierung einer eigenen Lösung ist unnötig risiko-behaftet, stattdessen bestehende Systeme einsetzen
+
 * die Implementation einer Authentifizierung ist nach meiner Erfahrung schon immer kompliziert gewesen, selbst in Monolithen:
   * User Datenbank muss gepflegt werden
   * Rollen und Gruppen müssen verwaltet werden

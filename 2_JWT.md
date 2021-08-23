@@ -1,16 +1,18 @@
 <!--s-->
-## Modularisierung von s0ftf1t
+## Modularisierung von s0ft-fit
 
 <!--v-->
 ### Problemstellung
 
 * wir haben expandiert, auf tausende Fitnessstudios
 * Login und Historie sind unterschiedlich stark frequentiert und sollen unabhängig skalieren um Ressourcen zu sparen
-* Wie überprüfen wir eine erfolgreiche Authentifizierung in einem verteilten System?
-  * Klasssicher Ansatz: sessionIds
+* Wie überprüft die Historie:
+  * zu welchem Nutzer die Anfrage gehört?
+  * ob der Nutzer sich korrekt authentifiziert hat?
+  * klasssicher Ansatz: sessions
 
 <!--v-->
-#### Login
+#### Login erzeugt Session
 
 ```puml
 actor user
@@ -27,6 +29,11 @@ return sessionId
 return sessionId
 return willkommen
 ```
+
+<!--v-->
+#### SessionId
+
+Die `sessionId` ist ein inhaltsloses zeitlich eingeschränkt gültiges Token welches das Backend zu einem konkreten Nutzer zugeordnet hat.
 
 <!--v-->
 #### Abruf der Historie
@@ -52,9 +59,17 @@ return tabelle
 <!--v-->
 #### Abruf der Historie
 
-* Sessions funktionieren gut für Warenkörbe (da session-Informationen verändert werden)
-* ein Login ändert sich aber nicht
-* Kann der Login nicht direkt geliefert werden statt einer Id die auf den User verweist?
+* Backend fragt erneut immer wieder die Login-Komponente an
+  * Auslastung der Login-Komponente vervielfacht sich mit Auslastung Backends
+  * Antwortzeiten des Backends erhöhen sich um Antwortzeit der login-Komponente
+  * gute Skalierung, schnelle Datenbank und evtl. globales Caching notwendig
+
+<!--v-->
+#### stateless Tokens
+
+* Sessions sind ideal für temporäre Datenbestände wie Warenkörbe
+* eine `UserId` ändert sich nicht während seiner Zugriffs
+* Können wir die `UserId` statt der `sessionId` liefern und sicherstellen, dass diese nicht vom Nutzer verändert wurde?
 
 <!--v-->
 ### Token
@@ -78,42 +93,52 @@ return tabelle
 ```
 
 <!--v-->
-#### JWT
+#### JSON Web Token (JWT)
 
-* Wie sicherstellen, dass das Token nicht verändert wurde?
-  * JSON Web Token (Aussprache: JOT)
-  * JWT ist Standard zum Austausch von **verifizierbaren** Informationen
+JWT ist ein RFC-Standard ([RFC 7519](https://datatracker.ietf.org/doc/html/rfc7519)) zum Austausch von **verifizierbaren** Informationen.
+
+> JWT's eignen sich [...] zur Implemen-tierung von "stateless sessions", da sämtliche authentifizierungsrelevanten Informationen im Token übertragen werden können und die Sitzung nicht zusätzlich auf einem Server gespeichert werden muss.
+
+Quelle: [wikipedia](https://de.wikipedia.org/w/index.php?title=JSON_Web_Token&oldid=212574521)
 
 <!--v-->
 #### JWT
 
 * Aufbau eines JWT-Token:
-  * "base64(Header).base64(Payload).signature"
+  * `base64(Header).base64(Payload).signature`
   * Header: unter anderem den Signatur-Algorithmus
-  * Payload: sog. "Claims", die verifizierbaren Entitäten
+  * Payload: sog. "claims", die verifizierbaren Entitäten
   * Signatur: hash des Klartexts aus header und payload entsprechend des im Header angegebenen Algorithmus
-  * Beispiel: JWT.io
+  * Beispiel: [jwt.io](https://jwt.io)
 
 <!--v-->
-### JWT
+### JWT Ausstellung
 
 ```puml
 actor user
 participant "webclient"
 participant "login"
-participant "bankdruecken-historie" as his
 
 user -> webclient++ : login bei "s0ftf1t.de"
 webclient -> login++ : login
 login -> login : validiere
 login -> login : erzeuge JWT
-login -> login : signiere JWT mittels\nprivate login-key
+login -> login : signiere JWT mittels\n**private-key**
 return --User-- **JWT**
 return willkommen
-...
+```
+
+<!--v-->
+### JWT Nutzung
+
+```puml
+actor user
+participant "webclient"
+participant "bankdruecken-historie" as his
+
 user -> webclient++ : Klick auf Historie
 webclient -> his++ : getFor(--User-- **JWT**)
-his -> his : validiere Signatur mittels\nlogin-public-key
+his -> his : validiere Signatur mittels\n**public-key**
 return history
 return tabelle
 ```
@@ -126,6 +151,8 @@ In einem verteilten System ist eine zentrale Authentifikations-Instanz welche JW
 ```puml
 left to right direction
 
+component webclient
+
 cloud "s0ft-fit" {
   component Login
   note right of [Login]
@@ -136,8 +163,8 @@ cloud "s0ft-fit" {
   note right of [his]
     prüft Signatur
     des Auth-Token
+
   end note
-  component webclient
 
   webclient --> Login: einloggen
   webclient --> his : Historie abrufen\nmit JWT im Header
