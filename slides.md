@@ -1,5 +1,5 @@
 ---
-title: reveal-md deployed to gh-pages
+title: dezentrale Authentifizierung mit OAuth 2
 separator: <!--s-->
 verticalSeparator: <!--v-->
 theme: solarized
@@ -17,4 +17,5 @@ revealOptions:
 {{1_Einleitung.md}}
 {{2_JWT.md}}
 {{3_oauth.md}}
-{{4_zusammenfassung.md}}
+{{4_openid_connect.md}}
+{{5_zusammenfassung.md}}
