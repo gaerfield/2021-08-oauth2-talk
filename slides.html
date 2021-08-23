@@ -27,48 +27,62 @@ Dezentrales Authentifizierungssystem für webbasierte Dienste.
 * OpenID Connect aufbauend auf OAuth erlaubt die Wiederverwendung desselben Logins für verschiedene Applikationen (Single-Sign-On) und den standardisierten Abruf von Profilinformationen
 
 </script></section><section data-markdown><script type="text/template">
-## Geschichte
+## Geschichte I
 
 * 2005 OpenID Vorstellung des offenen Single-Sign-On Protokolls
 * 2006 Entwicklung von OAuth 1.0 während der Integration von OpenID in Twitter (Delegation der Authentifizierung)
-* 2007 Vortstellung von OAuth 1.0
+* 2007 Vorstellung von OAuth 1.0
 * Juni 2007 Gründung der OpenID Foundation zur Sicherung von Markenrechten
+
+</script></section><section data-markdown><script type="text/template">
+## Geschichte I
+
 * Dezember 2007 OpenID 2.0
 * November 2008 Vorschlag an die IETF zur Standardisierung von OAuth
 * 2012 OAuth 2 durch die IETF als RFC 6749 und RFC 6750 veröffentlicht.
 * irgendwann OpenID Connect als Schicht oberhalb des OAuth Protokolls
 
-</script></section><section data-markdown><script type="text/template">
-## Startup s0ftf1t
 
-Fitnessstudio-Startup mit online Training-Tracker:
-* gehe Trainieren wann immer du willst
-* rufe deine Trainings-Historie ab wann immer du willst
+</script></section><section data-markdown><script type="text/template">
+## Startup s0ft-fit
+
+* 1 Fitnessstudio
+* USP: bieten online Training-Tracker
+
+> Gehe Trainieren wann immer du willst!
+> Rufe deine Trainings-Historie ab wann immer du willst!
 
 </script></section><section data-markdown><script type="text/template">
 ### Architektur
 
-<img src='https://g.gravizo.com/svg?@startuml;component "s0ft-fit.de";@enduml'/>
+<img src='https://g.gravizo.com/svg?@startuml;node server {;component "s0ft-fit.de";};@enduml'/>
 
 </script></section><section data-markdown><script type="text/template">
 ### Typischer Flow der Authentifizierung
 <img src='https://g.gravizo.com/svg?@startuml;actor user;participant "webclient";participant "server";user -> webclient++ : login bei "s0ft-fit.de";webclient -> server++ : login;server -> server : validiere;return ok;return willkommen;@enduml'/>
 
 </script></section></section><section ><section data-markdown><script type="text/template">
-## Modularisierung von s0ftf1t
+## Modularisierung von s0ft-fit
 
 </script></section><section data-markdown><script type="text/template">
 ### Problemstellung
 
 * wir haben expandiert, auf tausende Fitnessstudios
 * Login und Historie sind unterschiedlich stark frequentiert und sollen unabhängig skalieren um Ressourcen zu sparen
-* Wie überprüfen wir eine erfolgreiche Authentifizierung in einem verteilten System?
-  * Klasssicher Ansatz: sessionIds
+* Wie überprüft die Historie:
+  * zu welchem Nutzer die Anfrage gehört?
+  * ob der Nutzer sich korrekt authentifiziert hat?
+  * klasssicher Ansatz: sessions
 
 </script></section><section data-markdown><script type="text/template">
-#### Login
+#### Login erzeugt Session
 
 <img src='https://g.gravizo.com/svg?@startuml;actor user;participant "webclient";participant "login";database "session-management" as ses;;user -> webclient++ : login bei "s0ftf1t.de";webclient -> login++ : login;login -> login : validiere;login -> ses++ : loggedIn(User);ses -> ses : lege session an und speichere User;return sessionId;return sessionId;return willkommen;@enduml'/>
+
+</script></section><section data-markdown><script type="text/template">
+#### SessionId
+
+Die `sessionId` ist ein inhaltsloses zeitlich eingeschränkt gültiges Token welches das Backend zu einem konkreten Nutzer zugeordnet hat.
 
 </script></section><section data-markdown><script type="text/template">
 #### Abruf der Historie
@@ -78,9 +92,17 @@ Fitnessstudio-Startup mit online Training-Tracker:
 </script></section><section data-markdown><script type="text/template">
 #### Abruf der Historie
 
-* Sessions funktionieren gut für Warenkörbe (da session-Informationen verändert werden)
-* ein Login ändert sich aber nicht
-* Kann der Login nicht direkt geliefert werden statt einer Id die auf den User verweist?
+* Backend fragt erneut immer wieder die Login-Komponente an
+  * Auslastung der Login-Komponente vervielfacht sich mit Auslastung Backends
+  * Antwortzeiten des Backends erhöhen sich um Antwortzeit der login-Komponente
+  * gute Skalierung, schnelle Datenbank und evtl. globales Caching notwendig
+
+</script></section><section data-markdown><script type="text/template">
+#### stateless Tokens
+
+* Sessions sind ideal für temporäre Datenbestände wie Warenkörbe
+* eine `UserId` ändert sich nicht während seiner Zugriffs
+* Können wir die `UserId` statt der `sessionId` liefern und sicherstellen, dass diese nicht vom Nutzer verändert wurde?
 
 </script></section><section data-markdown><script type="text/template">
 ### Token
@@ -88,53 +110,64 @@ Fitnessstudio-Startup mit online Training-Tracker:
 <img src='https://g.gravizo.com/svg?@startuml;actor user;participant "webclient";participant "login";participant "bankdruecken-historie" as his;;user -> webclient++ : login bei "s0ftf1t.de";webclient -> login++ : login;login -> login : validiere;return User=Achim;return willkommen;...;user -> webclient++ : Klick auf Historie;webclient -> his++ : getFor(user = Achim);return history;return tabelle;@enduml'/>
 
 </script></section><section data-markdown><script type="text/template">
-#### JWT
+#### JSON Web Token (JWT)
 
-* Wie sicherstellen, dass das Token nicht verändert wurde?
-  * JSON Web Token (Aussprache: JOT)
-  * JWT ist Standard zum Austausch von **verifizierbaren** Informationen
+JWT ist ein RFC-Standard ([RFC 7519](https://datatracker.ietf.org/doc/html/rfc7519)) zum Austausch von **verifizierbaren** Informationen.
+
+> JWT's eignen sich [...] zur Implemen-tierung von "stateless sessions", da sämtliche authentifizierungsrelevanten Informationen im Token übertragen werden können und die Sitzung nicht zusätzlich auf einem Server gespeichert werden muss.
+
+Quelle: [wikipedia](https://de.wikipedia.org/w/index.php?title=JSON_Web_Token&oldid=212574521)
 
 </script></section><section data-markdown><script type="text/template">
 #### JWT
 
 * Aufbau eines JWT-Token:
-  * "base64(Header).base64(Payload).signature"
+  * `base64(Header).base64(Payload).signature`
   * Header: unter anderem den Signatur-Algorithmus
-  * Payload: sog. "Claims", die verifizierbaren Entitäten
+  * Payload: sog. "claims", die verifizierbaren Entitäten
   * Signatur: hash des Klartexts aus header und payload entsprechend des im Header angegebenen Algorithmus
-  * Beispiel: JWT.io
+  * Beispiel: [jwt.io](https://jwt.io)
 
 </script></section><section data-markdown><script type="text/template">
-### JWT
+### JWT Ausstellung
 
-<img src='https://g.gravizo.com/svg?@startuml;actor user;participant "webclient";participant "login";participant "bankdruecken-historie" as his;;user -> webclient++ : login bei "s0ftf1t.de";webclient -> login++ : login;login -> login : validiere;login -> login : erzeuge JWT;login -> login : signiere JWT mittels\nprivate login-key;return --User-- **JWT**;return willkommen;...;user -> webclient++ : Klick auf Historie;webclient -> his++ : getFor(--User-- **JWT**);his -> his : validiere Signatur mittels\nlogin-public-key;return history;return tabelle;@enduml'/>
+<img src='https://g.gravizo.com/svg?@startuml;actor user;participant "webclient";participant "login";;user -> webclient++ : login bei "s0ftf1t.de";webclient -> login++ : login;login -> login : validiere;login -> login : erzeuge JWT;login -> login : signiere JWT mittels\n**private-key**;return --User-- **JWT**;return willkommen;@enduml'/>
+
+</script></section><section data-markdown><script type="text/template">
+### JWT Nutzung
+
+<img src='https://g.gravizo.com/svg?@startuml;actor user;participant "webclient";participant "bankdruecken-historie" as his;;user -> webclient++ : Klick auf Historie;webclient -> his++ : getFor(--User-- **JWT**);his -> his : validiere Signatur mittels\n**public-key**;return history;return tabelle;@enduml'/>
 
 </script></section><section data-markdown><script type="text/template">
 ### Fazit
 
 In einem verteilten System ist eine zentrale Authentifikations-Instanz welche JWT-Tokens ausstellt hinreichend.
 
-<img src='https://g.gravizo.com/svg?@startuml;left to right direction;;cloud "s0ft-fit" {;component Login;note right of [Login];erstellt und signiert;Auth-Token (JWT);end note;component "bankdruecken-historie" as his;note right of [his];prüft Signatur;des Auth-Token;end note;component webclient;;webclient --> Login: einloggen;webclient --> his : Historie abrufen\nmit JWT im Header;webclient <-- Login : liefert Auth-Token (JWT);;his -> Login : ruft public key ab;};;;;@enduml'/>
+<img src='https://g.gravizo.com/svg?@startuml;left to right direction;;component webclient;;cloud "s0ft-fit" {;component Login;note right of [Login];erstellt und signiert;Auth-Token (JWT);end note;component "bankdruecken-historie" as his;note right of [his];prüft Signatur;des Auth-Token;;end note;;webclient --> Login: einloggen;webclient --> his : Historie abrufen\nmit JWT im Header;webclient <-- Login : liefert Auth-Token (JWT);;his -> Login : ruft public key ab;};;;;@enduml'/>
 
 </script></section></section><section ><section data-markdown><script type="text/template">
-## OAUTH
+## Öffnung von s0ft-fit für Drittanwendungen
 
 </script></section><section data-markdown><script type="text/template">
-### neue Andforderung
+### FitX-App will unsere Daten
 
 * s0ft-fit ist riesig geworden
+* europaweit verteilt, 500 Studios, unzählige Angestellte, eine App
 * die Tracker-App FitX möchte unsere Daten in ihre App für statistische Auswertungen integrieren
+  * Besser: wir erlauben potentiell allen Fitness-Trackern die Nutzung unserer API um mehr Kunden zu gewinnen.
 
 </script></section><section data-markdown><script type="text/template">
 ### Problemstellung
 
-* Wie geben wir der Firma Zugriff auf unsere Api?
-* Wie beschränken wir den Zugriff nur auf die Nutzer, die tatsächlich diese Daten weiterreichen möchten?
+* Wie erlauben wir Drittanwendungen den Zugriff auf unsere Api?
+* Wie beschränken wir den Zugriff der Drittanwendungen nur auf die Daten dessen Nutzer diese auch tatsächlich weiterreichen möchten?
 
 </script></section><section data-markdown><script type="text/template">
 ### OAuth
 
-OAuth erlaubt es Nutzern einer Anwendung eine andere Anwendung in Ihrem Namen aufzurufen, ohne dass geheime Details der Zugangsberechtigung geteilt werden müsen.
+> Ein Endbenutzer kann mit Hilfe von OAuth einer Anwendung den Zugriff auf seine Daten erlauben, die von einem anderen Dienst bereitgestellt werden, ohne geheime Details seiner Zugangsberechtigung preiszugeben.
+
+Quelle: [wikipedia](https://de.wikipedia.org/w/index.php?title=OAuth&oldid=212703586)
 
 </script></section><section data-markdown><script type="text/template">
 #### Beispiel Github
@@ -142,16 +175,27 @@ OAuth erlaubt es Nutzern einer Anwendung eine andere Anwendung in Ihrem Namen au
 * [Gitub - creating an oauth app](https://docs.github.com/en/developers/apps/building-oauth-apps/creating-an-oauth-app)
 
 </script></section><section data-markdown><script type="text/template">
-#### OAuth Grundbegriffe
+#### OAuth Grundbegriffe I
 
 * Resource Owner: Benutzer (der Zugriff auf seine Daten gewährt)
 * Resource Server: Dienst auf dem die geschützten Resourcen liegen
 * Client: Drittanwendung, die Zugriff auf die Daten möchte
 * Authorization Server: der Server, der den _Resource Owner_ authentifiziert und _Access Token_ und _Refresh Token_  ausstellt
+* Consent: die explizite Zustimmung des _Resource Owner_ ob sie dem _Client_ die angefragten Scopes gewähren
+
+</script></section><section data-markdown><script type="text/template">
+#### OAuth Grundbegriffe II
+
 * Access Token: kurzlebiges geheimes Token, mittels dessen Resourcen beim _Resource Server_ im Namen des _Resource Owner_ abgerufen werden können
 * Refresh Token: "langlebiges" geheimes Token mittels dem neue _Access Token_ beim _Authorization Server_ abgerufen werden können ohne sich erneut authentifizieren zu müssen
 * Scope: feingranulare Zugriffsrechte die durch den _Client_ angefragt werden
-* Consent: die explizite Zustimmung des _Resource Owner_ ob sie dem _Client_ die angefragten Scopes gewähren
+
+</script></section><section data-markdown><script type="text/template">
+#### Warum Access-Token und Refresh-Token?
+
+* Access-Token werden für den Zugriff auf den Resource-Server verwendet und werden häufig für verschiedenste Anfragen wiederverwendet
+* Refresh-Token verbleiben beim Client und werden ausschließlich für die Ausstellung neuer Access-Token verwendet
+* Access-Token sind dadurch potentiell leichter abgreifbar als Refresh-Token, durch die kurze Gültigkeit ist der Schaden aber begrenzt
 
 </script></section><section data-markdown><script type="text/template">
 #### der Oauth-Flow am Beispiel Github
@@ -160,16 +204,21 @@ OAuth erlaubt es Nutzern einer Anwendung eine andere Anwendung in Ihrem Namen au
 </script></section><section data-markdown><script type="text/template">
 #### Beispiel Github II
 
-* andere scopes ausprobieren
+* [Scopes](https://docs.github.com/en/developers/apps/building-oauth-apps/scopes-for-oauth-apps)
 
 </script></section><section data-markdown><script type="text/template">
-### Also OAuth selbst implementieren?
+### Nächster Schritt
 
-* tendenziell eher nein
-* stattdessen Identity Server nutzen:
+* Kling gut! Wir implementieren OAuth 2
+  * Äh ... Nein! Auf gar keinen Fall!
+
+</script></section><section data-markdown><script type="text/template">
+### Nächster Schritt
+
+* **entweder** ihr betreibt einen Identity Server:
   * [Liste div. Server](https://openid.net/developers/certified/)
   * z.B. Keycloak
-* oder extern einkaufen:
+* **oder** ihr nutzt einen Dienstleister dafür:
   * (Okta)[https://www.okta.com/de/]
   * (Auth0)[https://auth0.com/de]
 
@@ -217,6 +266,14 @@ Im Grunde: wir registrieren s0ft-fit als Drittanwendung in google bzw. github f�
 
 </script></section><section data-markdown><script type="text/template">
 ## Fazit
+
+* Authentifizierung und Autorisierung ist eine klassische querschnittliche Aufgabe (wie Logging, Tracing)
+* entsprechend sollten diese Aufgaben von der Domäne getrennt werden
+* OAuth 2.0 und OpenID Connect bieten einen Standad diese Trennung in der eigenen Applikation sicherzustellen
+* positive Seiteneffekte:
+  * Entwicklung des Backends vereinfacht sich, da nur auf entsprechende Scopes im Access-Token geprüft werden muss
+  * die Zukunftssicherheit der Applikation erhöht sich, da diese sich leichter mit weiteren Anwendungen integrieren kann
+  * die Implementierung einer eigenen Lösung ist unnötig risiko-behaftet, stattdessen bestehende Systeme einsetzen
 
 * die Implementation einer Authentifizierung ist nach meiner Erfahrung schon immer kompliziert gewesen, selbst in Monolithen:
   * User Datenbank muss gepflegt werden
