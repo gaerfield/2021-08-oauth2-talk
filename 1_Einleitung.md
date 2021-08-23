@@ -32,6 +32,7 @@ Fitnessstudio-Startup mit online Training-Tracker:
 component "s0ft-fit.de"
 ```
 
+<!--v-->
 ### Typischer Flow der Authentifizierung
 ```puml
 actor user
