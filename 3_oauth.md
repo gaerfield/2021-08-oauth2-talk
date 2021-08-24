@@ -84,13 +84,3 @@ return repositories
 
 * Kling gut! Wir implementieren OAuth 2
   * Äh ... Nein! Auf gar keinen Fall!
-
-<!--v-->
-### Nächster Schritt
-
-* **entweder** ihr betreibt einen Identity Server:
-  * [Liste div. Server](https://openid.net/developers/certified/)
-  * z.B. Keycloak
-* **oder** ihr nutzt einen Dienstleister dafür:
-  * (Okta)[https://www.okta.com/de/]
-  * (Auth0)[https://auth0.com/de]
