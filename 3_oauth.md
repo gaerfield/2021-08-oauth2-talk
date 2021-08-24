@@ -47,7 +47,7 @@ Quelle: [wikipedia](https://de.wikipedia.org/w/index.php?title=OAuth&oldid=21270
 #### Warum Access-Token und Refresh-Token?
 
 * Access-Token werden für den Zugriff auf den Resource-Server verwendet und werden häufig für verschiedenste Anfragen wiederverwendet
-* Refresh-Token verbleiben beim Client und werden ausschließlich für die Ausstellung neuer Access-Token verwendet
+* Refresh-Token verbleiben beim Resource Owner und werden ausschließlich für die Ausstellung neuer Access-Token verwendet
 * Access-Token sind dadurch potentiell leichter abgreifbar als Refresh-Token, durch die kurze Gültigkeit ist der Schaden aber begrenzt
 
 <!--v-->
@@ -67,7 +67,7 @@ return username+password
 auth -> auth : authentifiziere
 auth -> reso++ : Zugriff gewähren für scope "repo"?
 return OK
-return github-token
+return refresh-token, access-token
 end
 client -> ress++ : GET /users/gaerfield/repos\nRequest-Header: github-token
 return repositories

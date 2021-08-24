@@ -33,7 +33,7 @@ left to right direction
 component webclient
 
 cloud "s0ft-fit" {
-  component """--Login--""\n**Authorization Server**" as Login
+  component "**Authorization Server**" as Login
   note right of [Login]
     erstellt und signiert
     Auth-Token (JWT)
@@ -56,13 +56,13 @@ cloud "s0ft-fit" {
 <!--v-->
 ### login-komponente durch einen Authorization Server ersetzen
 
-servce
+service
 
 ```puml
 left to right direction
 
 component webclient
-component """--Login--""\n**Authorization Server**" as Login
+component "**Authorization Server**" as Login
 note right of [Login]
 erstellt und signiert
 Auth-Token (JWT)
@@ -73,7 +73,6 @@ cloud "s0ft-fit" {
   note right of [his]
     prüft Signatur
     des Auth-Token
-
   end note
 
   webclient --> Login: einloggen
