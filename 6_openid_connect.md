@@ -106,3 +106,11 @@ client -> ress++ : GET /history\nRequest-Header: s0ft-fit token
 return history
 return history
 ```
+
+<!--v-->
+#### weitere Vorteile
+
+* automatische Synchronisation von Account-Informationen aus dem ID-Token
+* verwenden verschiedener Accounts für denselben Account (Account Linking)
+  * passwortlose Registrierung mit Mobiltelefon
+  * später Verlinkung eines Kontos mit erweiterten Profilinformationen des Google- oder Apple-Kontos
