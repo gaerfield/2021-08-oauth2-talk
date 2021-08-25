@@ -15,7 +15,7 @@ Dezentrales Authentifizierungssystem für webbasierte Dienste.
 * Juni 2007 Gründung der OpenID Foundation zur Sicherung von Markenrechten
 
 <!--v-->
-## Geschichte I
+## Geschichte II
 
 * Dezember 2007 OpenID 2.0
 * November 2008 Vorschlag an die IETF zur Standardisierung von OAuth

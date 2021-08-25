@@ -9,7 +9,7 @@
 * Wie überprüft die Historie:
   * zu welchem Nutzer die Anfrage gehört?
   * ob der Nutzer sich korrekt authentifiziert hat?
-  * klasssicher Ansatz: sessions
+  * klasssicher Ansatz: sessions <!-- .element: class="fragment" data-fragment-index="1" -->
 
 <!--v-->
 #### Login erzeugt Session
@@ -57,7 +57,7 @@ return tabelle
 ```
 
 <!--v-->
-#### Abruf der Historie
+#### Nachteile der SessionId
 
 * Backend fragt erneut immer wieder die Login-Komponente an
   * Auslastung der Login-Komponente vervielfacht sich mit Auslastung Backends
@@ -146,7 +146,7 @@ return tabelle
 <!--v-->
 ### Fazit
 
-In einem verteilten System ist eine zentrale Authentifikations-Instanz welche JWT-Tokens ausstellt hinreichend.
+In einem verteilten System **ohne public API** ist eine zentrale Authentifikations-Instanz welche JWT-Tokens ausstellt hinreichend.
 
 ```puml
 left to right direction

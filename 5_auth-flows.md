@@ -55,7 +55,7 @@ return Authentifizierung und Autorisierung
 return Authorization Code
 app -> auth++ : Anfrage an /oauth/token\nAuthorization Code + Client ID + Client Secret
 auth -> auth : validiere Authorization Code\n+ Client ID + Client Secret
-return ID Token und Access Token
+return Access Token
 app -> backend++ : Anfrage mittels Access Token
 return geschützte Resource
 return geschützte Resource
@@ -135,5 +135,5 @@ return geschützte Resource
 
 * Client Credentials Flow: für M2M-Szenarien
 * Authorization Code Flow (PKCE): für Web und Native Apps
-* Resource Owner Password Flow
-  * IOT-Geräte mit eigenen Nutzern
+* Resource Owner Password Flow <!-- .element: class="fragment" data-fragment-index="1" -->
+  * IOT-Geräte mit eigenen Nutzern <!-- .element: class="fragment" data-fragment-index="1" -->

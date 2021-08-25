@@ -84,24 +84,22 @@ cloud s0ft-fit {
 ```puml
 Actor "Ich\n(Resource Owner)" as reso
 participant "Postman\n(Client)" as client
-participant "bankdruecken-history\n(Resource Server)" as ress
 participant "login\n(Authorization Server)" as auth
 participant "github\n(externer Authorization Server)" as gauth
+participant "bankdruecken-history\n(Resource Server)" as ress
 
-reso -> client++ : get repositories
-group wenn kein access token vorhanden
-client -> auth++ : redirect
+reso -> client++ : /login
+client -> auth++ : /login
 auth -> reso++ : bitte einloggen\n**oder social login wählen**
 return einloggen mit github
-auth -> gauth++ : redirect
+auth -> gauth++ : /authorize
 gauth -> reso++ : bitte einloggen
-return username + passwort
-gauth -> gauth : authentifiziere
-return idtoken
+return Authentifizierung und Autorisierung
+gauth -> gauth : Validierung
+return Access Token + ID Token
 auth -> auth : validiere token
-auth -> auth : finde passenden Account\n(oder erstelle neuen)
+auth -> auth : finde und synchronisiere Account
 return s0ft-fit Access Token
-end
 client -> ress++ : GET /history\nRequest-Header: s0ft-fit token
 return history
 return history

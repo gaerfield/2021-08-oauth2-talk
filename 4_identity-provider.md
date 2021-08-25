@@ -5,11 +5,11 @@
 ### Warum nicht selber bauen?
 
 * Risiko und Kosten einer eigenen Implementation zu hoch
-  * wie Passwörter hashen
-  * wie Anwendung skalieren
+  * Passwörter hashen
+  * Anwendung skalierbar implementieren
   * Schutz vor Attacken auf Applikationsebene
   * Schutz gegen Brute-Force und Phishing
-  * usw.
+  * und das OAuth2 - Protokoll korrekt implementieren: [RFC 6749](https://datatracker.ietf.org/doc/html/rfc6749) [RFC 6750](https://datatracker.ietf.org/doc/html/rfc6750)<!-- .element: class="fragment" data-fragment-index="1" --> [RFC 7523](https://datatracker.ietf.org/doc/html/rfc7523)<!-- .element: class="fragment" data-fragment-index="2" --> [RFC 7522](https://datatracker.ietf.org/doc/html/rfc7522)<!-- .element: class="fragment" data-fragment-index="3" -->
 
 <!--v-->
 ### Identity Provider
@@ -19,13 +19,11 @@
   * z.B. Keycloak
   * [zertifizierte OpenId Server](https://openid.net/developers/certified/)
 * als Service:
-  * (Okta)[https://www.okta.com/de/]
-  * (Auth0)[https://auth0.com/de]
+  * [Okta](https://www.okta.com/de/)
+  * [Auth0](https://auth0.com/de)
 
 <!--v-->
 ### login-komponente durch einen Authorization Server ersetzen
-
-on-premise
 
 ```puml
 left to right direction
@@ -54,9 +52,7 @@ cloud "s0ft-fit" {
 ```
 
 <!--v-->
-### login-komponente durch einen Authorization Server ersetzen
-
-service
+### login-komponente durch Identity Provider ersetzen
 
 ```puml
 left to right direction

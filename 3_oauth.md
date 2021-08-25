@@ -7,7 +7,7 @@
 * s0ft-fit ist riesig geworden
 * europaweit verteilt, 500 Studios, unzählige Angestellte, eine App
 * die Tracker-App FitX möchte unsere Daten in ihre App für statistische Auswertungen integrieren
-  * Besser: wir erlauben potentiell allen Fitness-Trackern die Nutzung unserer API um mehr Kunden zu gewinnen.
+  * Besser: wir erlauben potentiell allen Fitness-Trackern die Nutzung unserer API um mehr Kunden zu gewinnen. <!-- .element: class="fragment" data-fragment-index="1" -->
 
 <!--v-->
 ### Problemstellung
@@ -67,7 +67,7 @@ return username+password
 auth -> auth : authentifiziere
 auth -> reso++ : Zugriff gewähren für scope "repo"?
 return OK
-return refresh-token, access-token
+return access-token
 end
 client -> ress++ : GET /users/gaerfield/repos\nRequest-Header: github-token
 return repositories
@@ -83,4 +83,4 @@ return repositories
 ### Nächster Schritt
 
 * Kling gut! Wir implementieren OAuth 2
-  * Äh ... Nein! Auf gar keinen Fall!
+  * Äh ... Nein! Auf gar keinen Fall! <!-- .element: class="fragment" data-fragment-index="1" -->
