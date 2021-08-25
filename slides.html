@@ -35,7 +35,7 @@ Dezentrales Authentifizierungssystem für webbasierte Dienste.
 * Juni 2007 Gründung der OpenID Foundation zur Sicherung von Markenrechten
 
 </script></section><section data-markdown><script type="text/template">
-## Geschichte I
+## Geschichte II
 
 * Dezember 2007 OpenID 2.0
 * November 2008 Vorschlag an die IETF zur Standardisierung von OAuth
@@ -72,7 +72,7 @@ Dezentrales Authentifizierungssystem für webbasierte Dienste.
 * Wie überprüft die Historie:
   * zu welchem Nutzer die Anfrage gehört?
   * ob der Nutzer sich korrekt authentifiziert hat?
-  * klasssicher Ansatz: sessions
+  * klasssicher Ansatz: sessions <!-- .element: class="fragment" data-fragment-index="1" -->
 
 </script></section><section data-markdown><script type="text/template">
 #### Login erzeugt Session
@@ -90,7 +90,7 @@ Die `sessionId` ist ein inhaltsloses zeitlich eingeschränkt gültiges Token wel
 <img src='https://g.gravizo.com/svg?@startuml;actor user;participant "webclient";participant "bankdruecken-historie" as his;participant "login";database "session-management" as ses;;user -> webclient++ : Klick auf Historie;webclient -> his++ : getFor(sessionId);his -> login++ : getUserForSession(sessionId);login -> ses++ : sessionId;return User;return User;his -> his : getFor(User);return history;return tabelle;@enduml'/>
 
 </script></section><section data-markdown><script type="text/template">
-#### Abruf der Historie
+#### Nachteile der SessionId
 
 * Backend fragt erneut immer wieder die Login-Komponente an
   * Auslastung der Login-Komponente vervielfacht sich mit Auslastung Backends
@@ -141,7 +141,7 @@ Quelle: [wikipedia](https://de.wikipedia.org/w/index.php?title=JSON_Web_Token&ol
 </script></section><section data-markdown><script type="text/template">
 ### Fazit
 
-In einem verteilten System ist eine zentrale Authentifikations-Instanz welche JWT-Tokens ausstellt hinreichend.
+In einem verteilten System **ohne public API** ist eine zentrale Authentifikations-Instanz welche JWT-Tokens ausstellt hinreichend.
 
 <img src='https://g.gravizo.com/svg?@startuml;left to right direction;;component webclient;;cloud "s0ft-fit" {;component Login;note right of [Login];erstellt und signiert;Auth-Token (JWT);end note;component "bankdruecken-historie" as his;note right of [his];prüft Signatur;des Auth-Token;;end note;;webclient --> Login: einloggen;webclient --> his : Historie abrufen\nmit JWT im Header;webclient <-- Login : liefert Auth-Token (JWT);;his -> Login : ruft public key ab;};;;;@enduml'/>
 
@@ -154,7 +154,7 @@ In einem verteilten System ist eine zentrale Authentifikations-Instanz welche JW
 * s0ft-fit ist riesig geworden
 * europaweit verteilt, 500 Studios, unzählige Angestellte, eine App
 * die Tracker-App FitX möchte unsere Daten in ihre App für statistische Auswertungen integrieren
-  * Besser: wir erlauben potentiell allen Fitness-Trackern die Nutzung unserer API um mehr Kunden zu gewinnen.
+  * Besser: wir erlauben potentiell allen Fitness-Trackern die Nutzung unserer API um mehr Kunden zu gewinnen. <!-- .element: class="fragment" data-fragment-index="1" -->
 
 </script></section><section data-markdown><script type="text/template">
 ### Problemstellung
@@ -199,7 +199,7 @@ Quelle: [wikipedia](https://de.wikipedia.org/w/index.php?title=OAuth&oldid=21270
 
 </script></section><section data-markdown><script type="text/template">
 #### der Oauth-Flow am Beispiel Github
-<img src='https://g.gravizo.com/svg?@startuml;;Actor "Ich\n(Resource Owner)" as reso;participant "Postman\n(Client)" as client;participant "Github\n(Resource Server)" as ress;participant "Github Auth\n(Authorization Server)" as auth;;reso -> client++ : get repositories;group wenn kein access token vorhanden;client -> auth++ : redirect;auth -> reso++ : bitte einloggen;return username+password;auth -> auth : authentifiziere;auth -> reso++ : Zugriff gewähren für scope "repo"?;return OK;return refresh-token, access-token;end;client -> ress++ : GET /users/gaerfield/repos\nRequest-Header: github-token;return repositories;return repositories;@enduml'/>
+<img src='https://g.gravizo.com/svg?@startuml;;Actor "Ich\n(Resource Owner)" as reso;participant "Postman\n(Client)" as client;participant "Github\n(Resource Server)" as ress;participant "Github Auth\n(Authorization Server)" as auth;;reso -> client++ : get repositories;group wenn kein access token vorhanden;client -> auth++ : redirect;auth -> reso++ : bitte einloggen;return username+password;auth -> auth : authentifiziere;auth -> reso++ : Zugriff gewähren für scope "repo"?;return OK;return access-token;end;client -> ress++ : GET /users/gaerfield/repos\nRequest-Header: github-token;return repositories;return repositories;@enduml'/>
 
 </script></section><section data-markdown><script type="text/template">
 #### Beispiel Github II
@@ -210,7 +210,7 @@ Quelle: [wikipedia](https://de.wikipedia.org/w/index.php?title=OAuth&oldid=21270
 ### Nächster Schritt
 
 * Kling gut! Wir implementieren OAuth 2
-  * Äh ... Nein! Auf gar keinen Fall!
+  * Äh ... Nein! Auf gar keinen Fall! <!-- .element: class="fragment" data-fragment-index="1" -->
 
 </script></section></section><section ><section data-markdown><script type="text/template">
 ## s0ft-fits Identity-provider
@@ -219,11 +219,11 @@ Quelle: [wikipedia](https://de.wikipedia.org/w/index.php?title=OAuth&oldid=21270
 ### Warum nicht selber bauen?
 
 * Risiko und Kosten einer eigenen Implementation zu hoch
-  * wie Passwörter hashen
-  * wie Anwendung skalieren
+  * Passwörter hashen
+  * Anwendung skalierbar implementieren
   * Schutz vor Attacken auf Applikationsebene
   * Schutz gegen Brute-Force und Phishing
-  * usw.
+  * und das OAuth2 - Protokoll korrekt implementieren: [RFC 6749](https://datatracker.ietf.org/doc/html/rfc6749) [RFC 6750](https://datatracker.ietf.org/doc/html/rfc6750)<!-- .element: class="fragment" data-fragment-index="1" --> [RFC 7523](https://datatracker.ietf.org/doc/html/rfc7523)<!-- .element: class="fragment" data-fragment-index="2" --> [RFC 7522](https://datatracker.ietf.org/doc/html/rfc7522)<!-- .element: class="fragment" data-fragment-index="3" -->
 
 </script></section><section data-markdown><script type="text/template">
 ### Identity Provider
@@ -233,20 +233,16 @@ Quelle: [wikipedia](https://de.wikipedia.org/w/index.php?title=OAuth&oldid=21270
   * z.B. Keycloak
   * [zertifizierte OpenId Server](https://openid.net/developers/certified/)
 * als Service:
-  * (Okta)[https://www.okta.com/de/]
-  * (Auth0)[https://auth0.com/de]
+  * [Okta](https://www.okta.com/de/)
+  * [Auth0](https://auth0.com/de)
 
 </script></section><section data-markdown><script type="text/template">
 ### login-komponente durch einen Authorization Server ersetzen
-
-on-premise
 
 <img src='https://g.gravizo.com/svg?@startuml;left to right direction;;component webclient;;cloud "s0ft-fit" {;component "**Authorization Server**" as Login;note right of [Login];erstellt und signiert;Auth-Token (JWT);end note;component "bankdruecken-historie" as his;note right of [his];prüft Signatur;des Auth-Token;;end note;;webclient --> Login: einloggen;webclient --> his : Historie abrufen\nmit JWT im Header;webclient <-- Login : liefert Auth-Token (JWT);;his -> Login : ruft public key ab;};@enduml'/>
 
 </script></section><section data-markdown><script type="text/template">
-### login-komponente durch einen Authorization Server ersetzen
-
-service
+### login-komponente durch Identity Provider ersetzen
 
 <img src='https://g.gravizo.com/svg?@startuml;left to right direction;;component webclient;component "**Authorization Server**" as Login;note right of [Login];erstellt und signiert;Auth-Token (JWT);end note;;cloud "s0ft-fit" {;component "bankdruecken-historie" as his;note right of [his];prüft Signatur;des Auth-Token;end note;;webclient --> Login: einloggen;webclient --> his : Historie abrufen\nmit JWT im Header;webclient <-- Login : liefert Auth-Token (JWT);;his -> Login : ruft public key ab;};@enduml'/>
 
@@ -287,7 +283,7 @@ service
 </script></section><section data-markdown><script type="text/template">
 ### Authorization Code Flow
 
-<img src='https://g.gravizo.com/svg?@startuml;actor "resource owner" as user;participant "client" as app;participant "authorization server" as auth;participant "resource server" as backend;;user -> app++ : login;app -> auth++ : /authorize\nresponse_type=code\nclient_id;auth -> user++ : redirect zu login\nAutorisierung;return Authentifizierung und Autorisierung;return Authorization Code;app -> auth++ : Anfrage an /oauth/token\nAuthorization Code + Client ID + Client Secret;auth -> auth : validiere Authorization Code\n+ Client ID + Client Secret;return ID Token und Access Token;app -> backend++ : Anfrage mittels Access Token;return geschützte Resource;return geschützte Resource;@enduml'/>
+<img src='https://g.gravizo.com/svg?@startuml;actor "resource owner" as user;participant "client" as app;participant "authorization server" as auth;participant "resource server" as backend;;user -> app++ : login;app -> auth++ : /authorize\nresponse_type=code\nclient_id;auth -> user++ : redirect zu login\nAutorisierung;return Authentifizierung und Autorisierung;return Authorization Code;app -> auth++ : Anfrage an /oauth/token\nAuthorization Code + Client ID + Client Secret;auth -> auth : validiere Authorization Code\n+ Client ID + Client Secret;return Access Token;app -> backend++ : Anfrage mittels Access Token;return geschützte Resource;return geschützte Resource;@enduml'/>
 
 </script></section><section data-markdown><script type="text/template">
 ### Is the Client a Single-Page App oder native App?
@@ -332,8 +328,8 @@ service
 
 * Client Credentials Flow: für M2M-Szenarien
 * Authorization Code Flow (PKCE): für Web und Native Apps
-* Resource Owner Password Flow
-  * IOT-Geräte mit eigenen Nutzern
+* Resource Owner Password Flow <!-- .element: class="fragment" data-fragment-index="1" -->
+  * IOT-Geräte mit eigenen Nutzern <!-- .element: class="fragment" data-fragment-index="1" -->
 
 </script></section></section><section ><section data-markdown><script type="text/template">
 ## OpenID
@@ -378,7 +374,15 @@ Wir integrieren alle provider für jede Komponente im Backend:
 </script></section><section data-markdown><script type="text/template">
 #### veränderter Login Flow
 
-<img src='https://g.gravizo.com/svg?@startuml;Actor "Ich\n(Resource Owner)" as reso;participant "Postman\n(Client)" as client;participant "bankdruecken-history\n(Resource Server)" as ress;participant "login\n(Authorization Server)" as auth;participant "github\n(externer Authorization Server)" as gauth;;reso -> client++ : get repositories;group wenn kein access token vorhanden;client -> auth++ : redirect;auth -> reso++ : bitte einloggen\n**oder social login wählen**;return einloggen mit github;auth -> gauth++ : redirect;gauth -> reso++ : bitte einloggen;return username + passwort;gauth -> gauth : authentifiziere;return idtoken;auth -> auth : validiere token;auth -> auth : finde passenden Account\n(oder erstelle neuen);return s0ft-fit Access Token;end;client -> ress++ : GET /history\nRequest-Header: s0ft-fit token;return history;return history;@enduml'/>
+<img src='https://g.gravizo.com/svg?@startuml;Actor "Ich\n(Resource Owner)" as reso;participant "Postman\n(Client)" as client;participant "login\n(Authorization Server)" as auth;participant "github\n(externer Authorization Server)" as gauth;participant "bankdruecken-history\n(Resource Server)" as ress;;reso -> client++ : /login;client -> auth++ : /login;auth -> reso++ : bitte einloggen\n**oder social login wählen**;return einloggen mit github;auth -> gauth++ : /authorize;gauth -> reso++ : bitte einloggen;return Authentifizierung und Autorisierung;gauth -> gauth : Validierung;return Access Token + ID Token;auth -> auth : validiere token;auth -> auth : finde und synchronisiere Account;return s0ft-fit Access Token;client -> ress++ : GET /history\nRequest-Header: s0ft-fit token;return history;return history;@enduml'/>
+
+</script></section><section data-markdown><script type="text/template">
+#### weitere Vorteile
+
+* automatische Synchronisation von Account-Informationen aus dem ID-Token
+* verwenden verschiedener Accounts für denselben Account (Account Linking)
+  * passwortlose Registrierung mit Mobiltelefon
+  * später Verlinkung eines Kontos mit erweiterten Profilinformationen des Google- oder Apple-Kontos
 
 </script></section></section><section ><section data-markdown><script type="text/template">
 ## Zusammenfassung
@@ -395,17 +399,21 @@ Wir integrieren alle provider für jede Komponente im Backend:
   * Access Tokens behalten ihre Gültigkeit auch nach Logout
 
 </script></section><section data-markdown><script type="text/template">
-## Fazit
+## Fazit I
 
+* niemals selber implementieren
 * Authentifizierung ist eine klassische querschnittliche Aufgabe
 * in verteilten Systemen durch eine eigene Komponente zu (wie bspw. auch Logging, Tracing und Monitoring)
+
+</script></section><section data-markdown><script type="text/template">
+## Fazit II
+
 * selbst dann sinnvoll, wenn die restliche Architektur monolithisch:
   * Zukunftssicherheit (Monolith leichter zu modularisieren)
   * vereinfacht die Architektur (nur permissions werden geprüft)
   * verlagert Sicherheitsrisiken zum Identity Provider
   * Standard-Konformität erlaubt einfachere Erweiterung auf neue Feature-Requests
   * kann getrennt voneinander betrieben werden (erhöht Wartbarkeit)
-* sollte niemals selber implementiert werden
 
 </script></section></section></div>
     </div>
