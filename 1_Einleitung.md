@@ -1,10 +1,7 @@
 <!--s-->
 ## Ziel
 
-Dezentrales Authentifizierungssystem für webbasierte Dienste.
-
-* OAuth als Protokoll zur Authentifizierung für die Autorisierung von Zugriffsrechten zwischen zwei Applikationen
-* OpenID Connect aufbauend auf OAuth erlaubt die Wiederverwendung desselben Logins für verschiedene Applikationen (Single-Sign-On) und den standardisierten Abruf von Profilinformationen
+Wie kann in einem verteilten System (z.B. im Fall von Microservices) geprüft werden ob ein Nutzer sich erfolgreich authentifiziert hat.
 
 <!--v-->
 ## Geschichte I

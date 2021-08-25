@@ -1,5 +1,5 @@
 ---
-title: dezentrale Authentifizierung mit OAuth 2
+title: Authentifizierung in verteilten Systemen mit OAuth 2
 separator: <!--s-->
 verticalSeparator: <!--v-->
 theme: solarized
@@ -12,7 +12,7 @@ revealOptions:
   backgroundTransition: 'fade'
 ---
 
-# dezentrale Authentifizierung mit OAuth 2
+# Authentifizierung in verteilten Systemen mit OAuth 2
 
 {{1_Einleitung.md}}
 {{2_JWT.md}}
