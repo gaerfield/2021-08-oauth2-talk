@@ -34,17 +34,27 @@ cloud s0ft-fit {
 ```
 
 <!--v-->
-### Lösung 2 - OpenID Connect
+### OpenId Connect
 
-OpenId Connect (OIDC) der aufbauend auf OAuth weitere "claims" definiert und Standard-Endpoints für automatische Discovery:
+> OAuth 2.0 is designed only for authorization, for granting access to data and features from one application to another. [...] OpenID Connect enables scenarios where one login can be used across multiple applications, also known as single sign-on (SSO)
 
-* Auth0: https://s0ft-fit.eu.auth0.com/.well-known/openid-configuration
-* Google: https://accounts.google.com/.well-known/openid-configuration
+[An Illustrated Guide to OAuth and OpenID Connect](https://developer.okta.com/blog/2019/10/21/illustrated-guide-to-oauth-and-oidc)
 
 <!--v-->
-#### grobe Architektur
+### OpenID Connect upgrade
 
-Im Grunde: wir registrieren s0ft-fit als Drittanwendung in google bzw. github für den Abruf von Profile-Informationen.
+* OpenId Connect (OIDC) erweitert OAuth 2.0
+  * Endpoints für dynamic discovery:
+    * [Google](https://accounts.google.com/.well-known/openid-configuration)
+    * [Auth0](https://s0ft-fit.eu.auth0.com/.well-known/openid-configuration)
+  * dynamic client registration
+  * fügt Token Informationen über eingeloggten Nutzer hinzu
+
+<!--v-->
+### Konfiguration von alternativen Anmeldungen
+
+* registrieren von s0ft-fit als Anwendung in google bzw. github für den Abruf von Profilinformationen
+* konfigurieren unseren Identity Provider mit Client ID und Client Secret von google bzw. github
 
 ```puml
 left to right direction
@@ -56,8 +66,8 @@ cloud s0ft-fit {
   component client
 
   client --> login : redirect to login
-  google --> login  : rufe idToken ab
-  github <-- login  : rufe idToken ab
+  google <-- login  : rufe ID Token ab
+  login --> github  : rufe ID Token ab
   login --> login : validiere Token
   client <-- login : liefere s0ft-fit\nAccess Token
 
@@ -69,7 +79,7 @@ cloud s0ft-fit {
 ```
 
 <!--v-->
-#### grobe Architektur
+#### veränderter Login Flow
 
 ```puml
 Actor "Ich\n(Resource Owner)" as reso

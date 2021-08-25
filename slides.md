@@ -18,6 +18,6 @@ revealOptions:
 {{2_JWT.md}}
 {{3_oauth.md}}
 {{4_identity-provider.md}}
-{{5_openid_connect.md}}
-{{6_auth-flows.md}}
+{{5_auth-flows.md}}
+{{6_openid_connect.md}}
 {{7_zusammenfassung.md}}
