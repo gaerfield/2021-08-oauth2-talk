@@ -194,12 +194,12 @@ Quelle: [wikipedia](https://de.wikipedia.org/w/index.php?title=OAuth&oldid=21270
 #### Warum Access-Token und Refresh-Token?
 
 * Access-Token werden für den Zugriff auf den Resource-Server verwendet und werden häufig für verschiedenste Anfragen wiederverwendet
-* Refresh-Token verbleiben beim Client und werden ausschließlich für die Ausstellung neuer Access-Token verwendet
+* Refresh-Token verbleiben beim Resource Owner und werden ausschließlich für die Ausstellung neuer Access-Token verwendet
 * Access-Token sind dadurch potentiell leichter abgreifbar als Refresh-Token, durch die kurze Gültigkeit ist der Schaden aber begrenzt
 
 </script></section><section data-markdown><script type="text/template">
 #### der Oauth-Flow am Beispiel Github
-<img src='https://g.gravizo.com/svg?@startuml;;Actor "Ich\n(Resource Owner)" as reso;participant "Postman\n(Client)" as client;participant "Github\n(Resource Server)" as ress;participant "Github Auth\n(Authorization Server)" as auth;;reso -> client++ : get repositories;group wenn kein access token vorhanden;client -> auth++ : redirect;auth -> reso++ : bitte einloggen;return username+password;auth -> auth : authentifiziere;auth -> reso++ : Zugriff gewähren für scope "repo"?;return OK;return github-token;end;client -> ress++ : GET /users/gaerfield/repos\nRequest-Header: github-token;return repositories;return repositories;@enduml'/>
+<img src='https://g.gravizo.com/svg?@startuml;;Actor "Ich\n(Resource Owner)" as reso;participant "Postman\n(Client)" as client;participant "Github\n(Resource Server)" as ress;participant "Github Auth\n(Authorization Server)" as auth;;reso -> client++ : get repositories;group wenn kein access token vorhanden;client -> auth++ : redirect;auth -> reso++ : bitte einloggen;return username+password;auth -> auth : authentifiziere;auth -> reso++ : Zugriff gewähren für scope "repo"?;return OK;return refresh-token, access-token;end;client -> ress++ : GET /users/gaerfield/repos\nRequest-Header: github-token;return repositories;return repositories;@enduml'/>
 
 </script></section><section data-markdown><script type="text/template">
 #### Beispiel Github II
@@ -241,17 +241,99 @@ Quelle: [wikipedia](https://de.wikipedia.org/w/index.php?title=OAuth&oldid=21270
 
 on-premise
 
-<img src='https://g.gravizo.com/svg?@startuml;left to right direction;;component webclient;;cloud "s0ft-fit" {;component """--Login--""\n**Authorization Server**" as Login;note right of [Login];erstellt und signiert;Auth-Token (JWT);end note;component "bankdruecken-historie" as his;note right of [his];prüft Signatur;des Auth-Token;;end note;;webclient --> Login: einloggen;webclient --> his : Historie abrufen\nmit JWT im Header;webclient <-- Login : liefert Auth-Token (JWT);;his -> Login : ruft public key ab;};@enduml'/>
+<img src='https://g.gravizo.com/svg?@startuml;left to right direction;;component webclient;;cloud "s0ft-fit" {;component "**Authorization Server**" as Login;note right of [Login];erstellt und signiert;Auth-Token (JWT);end note;component "bankdruecken-historie" as his;note right of [his];prüft Signatur;des Auth-Token;;end note;;webclient --> Login: einloggen;webclient --> his : Historie abrufen\nmit JWT im Header;webclient <-- Login : liefert Auth-Token (JWT);;his -> Login : ruft public key ab;};@enduml'/>
 
 </script></section><section data-markdown><script type="text/template">
 ### login-komponente durch einen Authorization Server ersetzen
 
-servce
+service
 
-<img src='https://g.gravizo.com/svg?@startuml;left to right direction;;component webclient;component """--Login--""\n**Authorization Server**" as Login;note right of [Login];erstellt und signiert;Auth-Token (JWT);end note;;cloud "s0ft-fit" {;component "bankdruecken-historie" as his;note right of [his];prüft Signatur;des Auth-Token;;end note;;webclient --> Login: einloggen;webclient --> his : Historie abrufen\nmit JWT im Header;webclient <-- Login : liefert Auth-Token (JWT);;his -> Login : ruft public key ab;};@enduml'/>
+<img src='https://g.gravizo.com/svg?@startuml;left to right direction;;component webclient;component "**Authorization Server**" as Login;note right of [Login];erstellt und signiert;Auth-Token (JWT);end note;;cloud "s0ft-fit" {;component "bankdruecken-historie" as his;note right of [his];prüft Signatur;des Auth-Token;end note;;webclient --> Login: einloggen;webclient --> his : Historie abrufen\nmit JWT im Header;webclient <-- Login : liefert Auth-Token (JWT);;his -> Login : ruft public key ab;};@enduml'/>
 
 </script></section><section data-markdown><script type="text/template">
 ### Beispiel Auth0
+
+</script></section></section><section ><section data-markdown><script type="text/template">
+## OAuth Flows
+
+</script></section><section data-markdown><script type="text/template">
+### Authentifikationprozesse
+
+* verschiedene Anwendungsfälle benötigen verschiedene Authentifikationprozesse:
+  * Machine-2-Machine Kommunikation ohne Nutzer
+  * Webapps die das Backend serverseitig anfragen
+  * Applikationen die clientseitig betrieben werden (native oder webapps)
+
+</script></section><section data-markdown><script type="text/template">
+### Machine-2-Machine Kommunikation ohne Nutzer
+
+* Client ist gleichzeitig auch Resource Owner (fragt eigene Daten ab)
+* bspw. CronJobs die keinen Nutzer haben
+* keine Nutzer-Authentifizierung möglich
+* Client-Id und Client-Secret zur Erlangung eines Access-Tokens
+* Client Credentials Flow zur Erlangung M2M-Token
+
+</script></section><section data-markdown><script type="text/template">
+### Client Credentials Flow
+
+<img src='https://g.gravizo.com/svg?@startuml;participant "client" as app;participant "authorization server" as auth;participant "resource server" as backend;;app -> auth++ : Anfrage an /token\ngrant_type=client_credentials\nclient_id & client_secret;auth -> auth : validiere Client ID & Client Secret;return Access Token;app -> backend++ : Anfrage mittels Access Token;return geschützte Resource;@enduml'/>
+
+</script></section><section data-markdown><script type="text/template">
+### auf dem Server ausgeführte web app
+
+* Access Token wird direkt an den Webserver übermittelt auf dem der client betrieben wird
+* kein Risiko des ungewollten Verlusts, weil keine Tokens in den Browser übertragen werden
+
+</script></section><section data-markdown><script type="text/template">
+### Authorization Code Flow
+
+<img src='https://g.gravizo.com/svg?@startuml;actor "resource owner" as user;participant "client" as app;participant "authorization server" as auth;participant "resource server" as backend;;user -> app++ : login;app -> auth++ : /authorize\nresponse_type=code\nclient_id;auth -> user++ : redirect zu login\nAutorisierung;return Authentifizierung und Autorisierung;return Authorization Code;app -> auth++ : Anfrage an /oauth/token\nAuthorization Code + Client ID + Client Secret;auth -> auth : validiere Authorization Code\n+ Client ID + Client Secret;return ID Token und Access Token;app -> backend++ : Anfrage mittels Access Token;return geschützte Resource;return geschützte Resource;@enduml'/>
+
+</script></section><section data-markdown><script type="text/template">
+### Is the Client a Single-Page App oder native App?
+
+* Client Secrets werden per Client (also per App) ausgestellt
+* identisch für alle Nutzer und App-Instanzen
+* Native oder WebApps können das Client Secret nicht sicher speichern (Dekompilierung bzw. im Browser enthalten)
+* ein Angreifer könnte den `Authorization Code` abfangen (insbesondere durch registrierte custom urls "softfit://") und mittels des ausgelesen secrets Access-Tokens abfragen
+
+
+</script></section><section data-markdown><script type="text/template">
+### Authorization Code Flow (PKCE)
+
+* Erweiterung um Proof Key for Code Exchange (PKCE)
+* Client:
+  * erstellt Code Verifier und Code Challenge
+  * sendet Code Challenge um Authorization Code zu erhalten
+  * sendet Authorization Code und Code Verifier um Access Token zu erhalten
+* Attacken können nur den Authorization Code abfangen der ungenügend zur Ausstellung von Access Tokens ist
+
+</script></section><section data-markdown><script type="text/template">
+### Authorization Code Flow (PKCE)
+
+<img src='https://g.gravizo.com/svg?@startuml;actor "resource owner" as user;participant "client" as app;participant "authorization server" as auth;participant "resource server" as backend;;user -> app++ : login;app -> app : **generiere Code Verifier**\n**und Code Challenge**;app -> auth++ : /authorize\nClient ID & **Code Challenge**;auth -> user++ : redirect zum Login und Autorisierung;return Authentifizierung und Autorisierung;return Authorization Code;app -> auth++ : /access_token\nClient ID, Client Secret,\nAuthorization Code & **Code Verifier**;auth -> auth : validiere Code Verifier\nund Code Challenge;return ID Token und Access Token;app -> backend++ : Anfrage mittels Access Token;return geschützte Resource;return geschützte Resource;@enduml'/>
+
+</script></section><section data-markdown><script type="text/template">
+### falls redirect nicht möglich
+
+* Resource Owner Password Flow
+  * User und Passwort werden in der Applikation eingetragen
+* ist **ausschließlich** dann zu verwenden:
+  * wenn client absolut vertrauenswürdig
+  * redirect-basierte Flows nicht funktionieren
+
+</script></section><section data-markdown><script type="text/template">
+### Resource Owner Password Flow
+
+<img src='https://g.gravizo.com/svg?@startuml;actor "resource owner" as user;participant "client" as app;participant "authorization server" as auth;participant "resource server" as backend;;user -> app++ : login;app -> auth++ : Anfrage an "/oauth/token"\nAuthentifikation mit\nUser und Passwort;auth -> auth : validiere Username\nund Passwort;return Access Token;app -> backend++ : Anfrage mittels Access Token;return geschützte Resource;return geschützte Resource;@enduml'/>
+
+</script></section><section data-markdown><script type="text/template">
+## Zusammenfassung
+
+* Client Credentials Flow: für M2M-Szenarien
+* Authorization Code Flow (PKCE): für Web und Native Apps
+* Resource Owner Password Flow
+  * IOT-Geräte mit eigenen Nutzern
 
 </script></section></section><section ><section data-markdown><script type="text/template">
 ## OpenID
@@ -269,150 +351,61 @@ Wir integrieren alle provider für jede Komponente im Backend:
 <img src='https://g.gravizo.com/svg?@startuml;left to right direction;cloud google;cloud github;cloud s0ft-fit {;component login;component "bankdruecken-history" as his;component client;;client --> login : login falls s0ft-fit-account;client --> github : login falls github-account;client --> google : login falls google;;client ---> his : GET /history\nHeader enthält\ngoogle-token || github-token || s0ftfit-token;login <-- his : get public key;google <-- his : get public key;github <-- his : get public key;;his -> his : validiere token je nach typ;};@enduml'/>
 
 </script></section><section data-markdown><script type="text/template">
-### Lösung 2 - OpenID Connect
+### OpenId Connect
 
-OpenId Connect (OIDC) der aufbauend auf OAuth weitere "claims" definiert und Standard-Endpoints für automatische Discovery:
+> OAuth 2.0 is designed only for authorization, for granting access to data and features from one application to another. [...] OpenID Connect enables scenarios where one login can be used across multiple applications, also known as single sign-on (SSO)
 
-* Auth0: https://s0ft-fit.eu.auth0.com/.well-known/openid-configuration
-* Google: https://accounts.google.com/.well-known/openid-configuration
-
-</script></section><section data-markdown><script type="text/template">
-#### grobe Architektur
-
-Im Grunde: wir registrieren s0ft-fit als Drittanwendung in google bzw. github für den Abruf von Profile-Informationen.
-
-<img src='https://g.gravizo.com/svg?@startuml;left to right direction;cloud google;cloud github;cloud s0ft-fit {;component "Identity Provider\n(Auth0)" as login;component "bankdruecken-history" as his;component client;;client --> login : redirect to login;google --> login  : rufe idToken ab;github <-- login  : rufe idToken ab;login --> login : validiere Token;client <-- login : liefere s0ft-fit\nAccess Token;;;login <-- his : rufe public key ab;client --> his : rufe history mit\ns0ft-fit Token ab;his -> his : validiere token je nach typ;};@enduml'/>
+[An Illustrated Guide to OAuth and OpenID Connect](https://developer.okta.com/blog/2019/10/21/illustrated-guide-to-oauth-and-oidc)
 
 </script></section><section data-markdown><script type="text/template">
-#### grobe Architektur
+### OpenID Connect upgrade
+
+* OpenId Connect (OIDC) erweitert OAuth 2.0
+  * Endpoints für dynamic discovery:
+    * [Google](https://accounts.google.com/.well-known/openid-configuration)
+    * [Auth0](https://s0ft-fit.eu.auth0.com/.well-known/openid-configuration)
+  * dynamic client registration
+  * fügt Token Informationen über eingeloggten Nutzer hinzu
+
+</script></section><section data-markdown><script type="text/template">
+### Konfiguration von alternativen Anmeldungen
+
+* registrieren von s0ft-fit als Anwendung in google bzw. github für den Abruf von Profilinformationen
+* konfigurieren unseren Identity Provider mit Client ID und Client Secret von google bzw. github
+
+<img src='https://g.gravizo.com/svg?@startuml;left to right direction;cloud google;cloud github;cloud s0ft-fit {;component "Identity Provider\n(Auth0)" as login;component "bankdruecken-history" as his;component client;;client --> login : redirect to login;google <-- login  : rufe ID Token ab;login --> github  : rufe ID Token ab;login --> login : validiere Token;client <-- login : liefere s0ft-fit\nAccess Token;;;login <-- his : rufe public key ab;client --> his : rufe history mit\ns0ft-fit Token ab;his -> his : validiere token je nach typ;};@enduml'/>
+
+</script></section><section data-markdown><script type="text/template">
+#### veränderter Login Flow
 
 <img src='https://g.gravizo.com/svg?@startuml;Actor "Ich\n(Resource Owner)" as reso;participant "Postman\n(Client)" as client;participant "bankdruecken-history\n(Resource Server)" as ress;participant "login\n(Authorization Server)" as auth;participant "github\n(externer Authorization Server)" as gauth;;reso -> client++ : get repositories;group wenn kein access token vorhanden;client -> auth++ : redirect;auth -> reso++ : bitte einloggen\n**oder social login wählen**;return einloggen mit github;auth -> gauth++ : redirect;gauth -> reso++ : bitte einloggen;return username + passwort;gauth -> gauth : authentifiziere;return idtoken;auth -> auth : validiere token;auth -> auth : finde passenden Account\n(oder erstelle neuen);return s0ft-fit Access Token;end;client -> ress++ : GET /history\nRequest-Header: s0ft-fit token;return history;return history;@enduml'/>
-
-## OAuth Flows
-
-</script></section><section data-markdown><script type="text/template">
-### Ist der Client auch der Resource Owner?
-
-* Resource Owner ist ein Dienst ist der Zugriff benötigt (bspw. CronJobs)
-* keine Nutzer-Authentifizierung notwendig
-* M2M-Token
-* Client-Id und Client-Secret zur Erlangung eines Access-Tokens
-
-</script></section><section data-markdown><script type="text/template">
-### Client Credentials Flow
-
-https://auth0.com/docs/flows/client-credentials-flow
-
-</script></section><section data-markdown><script type="text/template">
-### auf dem Server ausgeführte web app
-
-* Access Token wird direkt an den Webserver übermittelt auf dem der client betrieben wird
-* kein Risiko des ungewollten Verlusts, weil keine Tokens in den Browser übertragen werden
-
-</script></section><section data-markdown><script type="text/template">
-### Authorization Code Flow
-
-https://auth0.com/docs/flows/authorization-code-flow
-
-</script></section><section data-markdown><script type="text/template">
-### Is the Client a Single-Page App oder native App?
-
-native apps:
-* Client Secrets werden per Client (also per App) ausgestellt
-* ist identisch für alle Nutzer und App-Instanzen
-* eine native kann das Client Secret nicht sicher speichern
-  * Dekompilierung
-  * andere Apps können custom URL schemes (bspw. "MyApp://") registrieren und potentiell den redirect zu sich umleiten und den Authorization Code abfangen
-* Single Page Apps können das Client Secret nicht sicher verwahren, weil deren gesamter Code im Browser liegt
-
-</script></section><section data-markdown><script type="text/template">
-### Authorization Code Flow (PKCE)
-
-* Erweiterung um:
-  * ein durch den Client dynamisch erstelltes Secret, der `Code Verifier`
-  * eine `Code Challenge` des `Code Verifier`
-* Client sendet Code Challenge an den Authorization Server um `Authorization Code` zu erhalten
-* `Code Verifier` verbleibt lokal
-* mittels `Authorization Code` und `Code Verifier` kann ein Access Token geholt werden
-* Attacken können nur den `Authorization Code` abfangen der ungenügend zur Ausstellung von Access Tokens ist
-
-</script></section><section data-markdown><script type="text/template">
-### Authorization Code Flow (PKCE)
-
-https://auth0.com/docs/flows/authorization-code-flow-with-proof-key-for-code-exchange-pkce
-
-</script></section><section data-markdown><script type="text/template">
-### benötigt die WebApp nur ein id Token?
-
-* "normaler" Login nach authorization code flow erfordert das backend ein secret zu verwalten
-* die App führt keine Aufrufe an den Resource Server durch und benötigt nur ein Id Token?
-
-</script></section><section data-markdown><script type="text/template">
-### Implicit Flow with Form Post
-
-https://auth0.com/docs/flows/implicit-flow-with-form-post
-
-</script></section><section data-markdown><script type="text/template">
-### Ist der Client voll vertrauenswürdig?
-
-* Resource Owner Password Flow
-  * User und Passwort werden in der Applikation eingetragen
-  * evtl. an das Backend übermittelt
-* ist **ausschließlich** dann zu verwenden werden, wenn redirect-basierte Flows (bspw. Authorization Code Flow) nicht funktionieren
-
-</script></section><section data-markdown><script type="text/template">
-### Resource Owner Password Flow
-
-https://auth0.com/docs/flows/resource-owner-password-flow
-
-## Zusammenfassung
-
-* Client Credentials Flow: für M2M-Szenarien
-* Authorization Code Flow (PKCE): für Web und Native Apps
-* Resource Owner Password Flow: um Geld bei M2M zu sparen
 
 </script></section></section><section ><section data-markdown><script type="text/template">
 ## Zusammenfassung
 
-* Java Web Tokens erlauben in verteilten Systemen den Austausch verifizierbarer Informationen
-* OAuth ermöglicht es Nutzern den Zugriff auf die eigenen Daten für Drittanwendungen zu steuern (ohne das Passwort weitergeben zu müssen)
-* OpenId ermöglicht es Logins wiederzuverwenden
+* Java Web Tokens erlaubt in verteilten Systemen den Austausch verifizierbarer Informationen
+* OAuth ermöglicht es Nutzern den Zugriff auf die eigenen Daten für Drittanwendungen zu steuern (ohne Weitergabe des Passworts)
+* OpenId ermöglicht Single-Sign-On
+
+</script></section><section data-markdown><script type="text/template">
+## Nachteile
+
+* Logout nur eingeschränkt möglich
+  * Refresh Tokens können invalidiert werden
+  * Access Tokens behalten ihre Gültigkeit auch nach Logout
 
 </script></section><section data-markdown><script type="text/template">
 ## Fazit
 
-* Authentifizierung und Autorisierung ist eine klassische querschnittliche Aufgabe (wie Logging, Tracing)
-* entsprechend sollten diese Aufgaben von der Domäne getrennt werden
-* OAuth 2.0 und OpenID Connect bieten einen Standad diese Trennung in der eigenen Applikation sicherzustellen
-* positive Seiteneffekte:
-  * Entwicklung des Backends vereinfacht sich, da nur auf entsprechende Scopes im Access-Token geprüft werden muss
-  * die Zukunftssicherheit der Applikation erhöht sich, da diese sich leichter mit weiteren Anwendungen integrieren kann
-  * die Implementierung einer eigenen Lösung ist unnötig risiko-behaftet, stattdessen bestehende Systeme einsetzen
-
-* die Implementation einer Authentifizierung ist nach meiner Erfahrung schon immer kompliziert gewesen, selbst in Monolithen:
-  * User Datenbank muss gepflegt werden
-  * Rollen und Gruppen müssen verwaltet werden
-  * etc.
-* selbst wenn keine Anforderung für Social Logins oder Zugriffserlaubnis für Drittanwendungen besteht, ist der Einsatz eines Identity-Providers zu bevorzugen (sei es on-premise oder service):
-  * Implementationskosten verlagern sich auf Konfigurationskosten
-  * Verringerung der Anwendungskomplexität:
-    * das Backend muss nichts über Authentifikation wissen
-    * alle relevanten Informationen sind im Token enthalten
-    * oder können beim Identity Provider abgefragt werden
-  * Betriebskosten sind identisch oder geringer
-  * geringere Sicherheitsrisiken
-  * erzwingt sinvollere Architektur durch Trennung von Verantwortlichkeiten über standardisierte Schnittstellen
-
-</script></section><section data-markdown><script type="text/template">
-## Fazit
-
-Bloß nicht selber implementieren!
-
-###  Links
-
-* https://openidconnect.net/
-
-dieses mal mit openid
+* Authentifizierung ist eine klassische querschnittliche Aufgabe
+* in verteilten Systemen durch eine eigene Komponente zu (wie bspw. auch Logging, Tracing und Monitoring)
+* selbst dann sinnvoll, wenn die restliche Architektur monolithisch:
+  * Zukunftssicherheit (Monolith leichter zu modularisieren)
+  * vereinfacht die Architektur (nur permissions werden geprüft)
+  * verlagert Sicherheitsrisiken zum Identity Provider
+  * Standard-Konformität erlaubt einfachere Erweiterung auf neue Feature-Requests
+  * kann getrennt voneinander betrieben werden (erhöht Wartbarkeit)
+* sollte niemals selber implementiert werden
 
 </script></section></section></div>
     </div>
