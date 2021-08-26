@@ -1,5 +1,5 @@
 ---
-title: Authentifizierung in verteilten Systemen mit OAuth 2
+title: Authentifizierung in verteilten Systemen
 separator: <!--s-->
 verticalSeparator: <!--v-->
 theme: solarized
@@ -12,7 +12,7 @@ revealOptions:
   backgroundTransition: 'fade'
 ---
 
-# Authentifizierung in verteilten Systemen mit OAuth 2
+# Authentifizierung in verteilten Systemen
 
 {{1_Einleitung.md}}
 {{2_JWT.md}}
